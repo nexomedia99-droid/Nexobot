@@ -23,7 +23,7 @@ function toggleTheme() {
     document.documentElement.setAttribute('data-theme', currentTheme);
     localStorage.setItem('theme', currentTheme);
     updateThemeIcon();
-    
+
     // Update charts for new theme
     setTimeout(() => {
         updateChartColors();
@@ -41,7 +41,7 @@ function updateChartColors() {
     const isDark = currentTheme === 'dark';
     const textColor = isDark ? '#ffffff' : '#5a5c69';
     const gridColor = isDark ? '#495057' : '#e3e6f0';
-    
+
     Object.values(charts).forEach(chart => {
         if (chart.options.scales) {
             chart.options.scales.x.ticks.color = textColor;
@@ -172,14 +172,14 @@ async function loadStats() {
     try {
         const response = await fetch('/api/stats');
         const data = await response.json();
-        
+
         if (data.error) {
             throw new Error(data.error);
         }
-        
+
         updateStatsDisplay(data);
         updateSystemStatus(data);
-        
+
     } catch (error) {
         console.error('Error loading stats:', error);
         showError('Failed to load statistics');
@@ -190,13 +190,13 @@ async function loadActivities() {
     try {
         const response = await fetch('/api/stats');
         const data = await response.json();
-        
+
         if (data.error) {
             throw new Error(data.error);
         }
-        
+
         updateActivitiesDisplay(data.recent_activities || []);
-        
+
     } catch (error) {
         console.error('Error loading activities:', error);
     }
@@ -206,13 +206,13 @@ async function loadAnalytics() {
     try {
         const response = await fetch('/api/analytics');
         const data = await response.json();
-        
+
         if (data.error) {
             throw new Error(data.error);
         }
-        
+
         updateChartsData(data);
-        
+
     } catch (error) {
         console.error('Error loading analytics:', error);
     }
@@ -225,7 +225,7 @@ function updateStatsDisplay(data) {
     document.getElementById('active-jobs').textContent = data.active_jobs?.toLocaleString() || '0';
     document.getElementById('ai-requests').textContent = data.ai_requests?.toLocaleString() || '0';
     document.getElementById('total-points').textContent = data.total_points?.toLocaleString() || '0';
-    
+
     // Update status indicator
     const statusIndicator = document.getElementById('status-indicator');
     if (statusIndicator) {
@@ -240,13 +240,13 @@ function updateSystemStatus(data) {
     if (uptimeElement) {
         uptimeElement.textContent = data.uptime || 'Unknown';
     }
-    
+
     // Update environment status
     const envStatus = data.environment_vars || {};
     updateStatusElement('bot-token-status', envStatus.bot_token);
     updateStatusElement('gemini-api-status', envStatus.gemini_api);
     updateStatusElement('owner-id-status', envStatus.owner_id);
-    
+
     // Update last activity
     const lastActivityElement = document.getElementById('last-activity');
     if (lastActivityElement) {
@@ -265,16 +265,16 @@ function updateStatusElement(elementId, status) {
 function updateActivitiesDisplay(activities) {
     const activitiesList = document.getElementById('activities-list');
     if (!activitiesList) return;
-    
+
     if (!activities || activities.length === 0) {
         activitiesList.innerHTML = '<div class="text-center text-muted">No recent activities</div>';
         return;
     }
-    
+
     const activitiesHtml = activities.map(activity => {
         const typeIcon = getActivityIcon(activity.type);
         const timeAgo = getTimeAgo(activity.timestamp);
-        
+
         return `
             <div class="activity-item fade-in">
                 <div class="activity-type">
@@ -285,7 +285,7 @@ function updateActivitiesDisplay(activities) {
             </div>
         `;
     }).join('');
-    
+
     activitiesList.innerHTML = activitiesHtml;
 }
 
@@ -300,7 +300,7 @@ function updateChartsData(data) {
         ];
         charts.jobStatus.update();
     }
-    
+
     // Update activity chart
     if (data.registration_trend && charts.activity) {
         const trend = data.registration_trend;
@@ -321,16 +321,16 @@ async function loadUsers(page = 1, search = '') {
     try {
         const params = new URLSearchParams({ page, limit: 20 });
         if (search) params.append('search', search);
-        
+
         const response = await fetch(`/api/users?${params}`);
         const data = await response.json();
-        
+
         if (data.error) {
             throw new Error(data.error);
         }
-        
+
         updateUsersTable(data);
-        
+
     } catch (error) {
         console.error('Error loading users:', error);
         showError('Failed to load users');
@@ -340,7 +340,7 @@ async function loadUsers(page = 1, search = '') {
 function updateUsersTable(data) {
     const tableContainer = document.getElementById('users-table');
     if (!tableContainer) return;
-    
+
     const tableHtml = `
         <table class="table table-striped table-hover">
             <thead class="table-dark">
@@ -366,7 +366,7 @@ function updateUsersTable(data) {
                 `).join('')}
             </tbody>
         </table>
-        
+
         <div class="d-flex justify-content-between align-items-center mt-3">
             <small class="text-muted">
                 Showing ${data.users.length} of ${data.total} users
@@ -378,7 +378,7 @@ function updateUsersTable(data) {
             </nav>
         </div>
     `;
-    
+
     tableContainer.innerHTML = tableHtml;
 }
 
@@ -393,16 +393,16 @@ async function loadJobs(page = 1, status = '') {
     try {
         const params = new URLSearchParams({ page, limit: 20 });
         if (status) params.append('status', status);
-        
+
         const response = await fetch(`/api/jobs?${params}`);
         const data = await response.json();
-        
+
         if (data.error) {
             throw new Error(data.error);
         }
-        
+
         updateJobsTable(data);
-        
+
     } catch (error) {
         console.error('Error loading jobs:', error);
         showError('Failed to load jobs');
@@ -412,7 +412,7 @@ async function loadJobs(page = 1, status = '') {
 function updateJobsTable(data) {
     const tableContainer = document.getElementById('jobs-table');
     if (!tableContainer) return;
-    
+
     const tableHtml = `
         <table class="table table-striped table-hover">
             <thead class="table-dark">
@@ -438,7 +438,7 @@ function updateJobsTable(data) {
                 `).join('')}
             </tbody>
         </table>
-        
+
         <div class="d-flex justify-content-between align-items-center mt-3">
             <small class="text-muted">
                 Showing ${data.jobs.length} of ${data.total} jobs
@@ -450,7 +450,7 @@ function updateJobsTable(data) {
             </nav>
         </div>
     `;
-    
+
     tableContainer.innerHTML = tableHtml;
 }
 
@@ -488,7 +488,7 @@ function getTimeAgo(timestamp) {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -507,23 +507,23 @@ function getStatusColor(status) {
 
 function generatePagination(currentPage, totalPages) {
     if (totalPages <= 1) return '';
-    
+
     let pagination = '';
     const maxVisible = 5;
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
         start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     // Previous button
     pagination += `
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
         </li>
     `;
-    
+
     // Page numbers
     for (let i = start; i <= end; i++) {
         pagination += `
@@ -532,14 +532,14 @@ function generatePagination(currentPage, totalPages) {
             </li>
         `;
     }
-    
+
     // Next button
     pagination += `
         <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
         </li>
     `;
-    
+
     return pagination;
 }
 
@@ -547,14 +547,14 @@ function generatePagination(currentPage, totalPages) {
 function setupEventListeners() {
     // Theme toggle
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-    
+
     // Job status filter
     document.querySelectorAll('input[name="status-filter"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             loadJobs(1, e.target.value);
         });
     });
-    
+
     // User search
     document.getElementById('user-search').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -590,7 +590,7 @@ function changePage(page) {
     // This will be implemented based on which modal is open
     const userModal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
     const jobModal = bootstrap.Modal.getInstance(document.getElementById('jobModal'));
-    
+
     if (userModal && userModal._isShown) {
         const search = document.getElementById('user-search').value;
         loadUsers(page, search);

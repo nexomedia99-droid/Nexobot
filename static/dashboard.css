@@ -221,16 +221,16 @@ body {
     .stat-value {
         font-size: 1.5rem;
     }
-    
+
     .stat-icon {
         font-size: 1.5rem;
     }
-    
+
     .floating-actions {
         bottom: 1rem;
         right: 1rem;
     }
-    
+
     .btn-floating {
         width: 48px;
         height: 48px;

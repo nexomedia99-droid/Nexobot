@@ -179,13 +179,9 @@ async def telegram_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     keyboard = [
         [
-            InlineKeyboardButton("💳 Dana", callback_data="Dana"),
-            InlineKeyboardButton("🏦 Seabank", callback_data="Seabank")
+            InlineKeyboardButton("💳 Dana", callback_data="payment:Dana"),
+            InlineKeyboardButton("🏦 Seabank", callback_data="payment:Seabank")
         ],
-        [
-            InlineKeyboardButton("🏧 GoPay", callback_data="GoPay"),
-            InlineKeyboardButton("💰 OVO", callback_data="OVO")
-        ]
     ]
     
     await update.message.reply_text(
@@ -239,7 +235,7 @@ async def owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     user_id = str(update.effective_user.id)
     context.user_data['owner_name'] = owner_name
-    context.user_data['points'] = 10  # Welcome bonus
+    context.user_data['points'] = 5  # Welcome bonus
 
     # Save user to database
     try:
@@ -287,7 +283,7 @@ async def owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         log_activity("registration", user_id, f"New member registered: {data['username']}")
 
         # Success message
-        total_points = 25 if referrer_user_id else 10
+        total_points = 25 if referrer_user_id else 5
         summary = (
             "🎉 *Pendaftaran Berhasil!*\n\n"
             f"👤 *Username:* `{data['username']}`\n"
@@ -300,9 +296,9 @@ async def owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💰 *Welcome Bonus:* {total_points} poin\n\n"
             "✅ *Akun kamu sudah aktif!*\n\n"
             "📋 *Langkah Selanjutnya:*\n"
-            "• Ketik `/start` → Join Group\n"
-            "• Gunakan `/listjob` untuk melihat job tersedia\n"
-            "• Gunakan `/help` untuk panduan lengkap\n\n"
+            "• Ketik /start 👉 Join Group\n"
+            "• Gunakan /listjob untuk melihat job tersedia\n"
+            "• Gunakan /help untuk panduan lengkap\n\n"
             "Selamat bergabung di NexoBuzz! 🚀"
         )
         
@@ -385,13 +381,9 @@ async def choose_field_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "edit_payment_method":
         keyboard = [
             [
-                InlineKeyboardButton("💳 Dana", callback_data="Dana"),
-                InlineKeyboardButton("🏦 Seabank", callback_data="Seabank")
+                InlineKeyboardButton("💳 Dana", callback_data="payment:Dana"),
+                InlineKeyboardButton("🏦 Seabank", callback_data="payment:Seabank")
             ],
-            [
-                InlineKeyboardButton("🏧 GoPay", callback_data="GoPay"),
-                InlineKeyboardButton("💰 OVO", callback_data="OVO")
-            ]
         ]
         await query.edit_message_text(
             "💳 *Edit Metode Payment*\n\n"
@@ -501,46 +493,29 @@ async def edit_telegram_step(update: Update, context: ContextTypes.DEFAULT_TYPE)
     return await editinfo_command(update, context)
 
 async def edit_payment_method_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle payment method edit"""
     query = update.callback_query
     await query.answer()
-    
+
+    if not query.data.startswith("payment:"):
+        return  # Bukan untuk edit payment
+
+    method = query.data.split(":", 1)[1]  # ambil setelah "payment:"
+
     user_id = str(query.from_user.id)
     data = get_user_by_id(user_id)
     old_method = data['payment_method']
-    data['payment_method'] = query.data
+    data['payment_method'] = method
     add_user(user_id, data)
-    
-    log_activity("edit_info", user_id, f"Payment method changed from {old_method} to {query.data}")
-    
+
+    log_activity("edit_info", user_id, f"Payment method changed from {old_method} to {method}")
+
     await query.edit_message_text(
         f"✅ *Metode Payment Berhasil Diubah*\n\n"
-        f"Metode baru: {query.data}",
+        f"Metode baru: {method}",
         parse_mode="Markdown"
     )
     return await editinfo_command(query, context)
 
-async def edit_payment_number_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle payment number edit"""
-    new_payment_number = sanitize_input(update.message.text.strip())
-    
-    if len(new_payment_number) < 8:
-        await update.message.reply_text("❌ Nomor payment terlalu pendek. Coba lagi:")
-        return EDIT_PAYMENT_NUMBER
-    
-    user_id = str(update.effective_user.id)
-    data = get_user_by_id(user_id)
-    data['payment_number'] = new_payment_number
-    add_user(user_id, data)
-    
-    log_activity("edit_info", user_id, "Payment number updated")
-    
-    await update.message.reply_text(
-        f"✅ *Nomor Payment Berhasil Diubah*\n\n"
-        f"Nomor baru: `{new_payment_number}`",
-        parse_mode="Markdown"
-    )
-    return await editinfo_command(update, context)
 
 async def edit_owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle owner name edit"""

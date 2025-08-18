@@ -74,7 +74,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "🔐 *Pendaftaran Member*\n\n"
             "Untuk memulai proses pendaftaran, silakan ketik:\n"
-            "`/register`\n\n"
+            "/register\n\n"
             "⚠️ Pastikan kamu melakukan pendaftaran di private chat (DM) ya!",
             parse_mode="Markdown"
         )

@@ -111,9 +111,9 @@ async def chat_with_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Prepare system prompt
         system_prompt = (
-            "Kamu adalah asisten AI untuk komunitas NexoBuzz, sebuah platform untuk buzzer dan influencer. "
-            "Jawab pertanyaan dengan ramah, informatif, dan helpful. "
-            "Gunakan bahasa Indonesia yang santai tapi tetap profesional. "
+            "Kamu adalah asisten AI untuk komunitas NexoBuzz."
+            "Jawab pertanyaan dengan santai tapi interaktif, suka bercanda, agak ngeselin, informatif, dan helpful, gaya gen z abiezzz "
+            "Gunakan bahasa Indonesia yang santai dan gaul"
             "Jika ditanya tentang NexoBuzz, jelaskan bahwa ini adalah platform untuk mendapatkan penghasilan "
             "melalui aktivitas buzzer dan influencer seperti like, comment, follow, review, dll."
         )
@@ -145,8 +145,8 @@ async def chat_with_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             
             # Give points for AI usage (only once per day per user)
-            if update.effective_chat.type != "private":
-                add_points_to_user(user_id, 1)
+            #if update.effective_chat.type != "private":
+                #add_points_to_user(user_id, 1)
             
             log_activity("ai_request", user_id, f"AI query: {user_input[:50]}...")
             
@@ -224,7 +224,7 @@ async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Generate summary
         system_prompt = (
             "Kamu adalah asisten yang bertugas merangkum percakapan grup. "
-            "Buatlah ringkasan yang informatif dari percakapan berikut. "
+            "Buatlah ringkasan yang informatif tapi santai dari percakapan berikut. "
             "Fokus pada topik utama, poin penting, dan keputusan yang diambil. "
             "Gunakan bahasa Indonesia yang ringkas dan mudah dipahami. "
             "Jika tidak ada topik yang signifikan, berikan ringkasan umum aktivitas grup."
@@ -255,7 +255,7 @@ async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             
             # Give points for using summary
-            add_points_to_user(user_id, 2)
+            #add_points_to_user(user_id, 2)
             log_activity("summary", user_id, "Generated group conversation summary")
             
         else:

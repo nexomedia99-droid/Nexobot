@@ -149,8 +149,6 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg += f"• Apply job: +2 poin\n"
         msg += f"• Aktif di grup: +1 poin\n"
         msg += f"• Referral berhasil: +25 poin\n"
-        msg += f"• Gunakan AI: +1 poin\n"
-        msg += f"• Summary grup: +2 poin\n\n"
         
         msg += f"🎯 *NEXT GOALS*\n"
         if points < 100:

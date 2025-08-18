@@ -45,7 +45,6 @@ Selamat datang di *NexoBot*! Berikut adalah panduan lengkap fitur yang tersedia:
    • Apply job: +2 poin
    • Aktif di grup: +1 poin
    • Referral berhasil: +25 poin
-   • Gunakan AI: +1 poin
 
 2. **Badge System:**
    • 🚀 Rising Star: Apply job pertama
