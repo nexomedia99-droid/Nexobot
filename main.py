@@ -165,7 +165,18 @@ def main():
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
         print(f"❌ Error starting bot: {e}")
-        raise
+        print("⚠️  Bot failed to start, but dashboard is still running on http://0.0.0.0:5000")
+        print("📝 Please check your BOT_TOKEN and try again")
+        
+        # Keep the dashboard running even if bot fails
+        try:
+            import time
+            print("🌐 Dashboard will continue running...")
+            while True:
+                time.sleep(60)  # Keep the process alive
+        except KeyboardInterrupt:
+            print("👋 Shutting down...")
+            pass
 
 if __name__ == "__main__":
     main()

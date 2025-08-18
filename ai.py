@@ -1,8 +1,7 @@
 import os
 import json
 import logging
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import ContextTypes
 from db import get_user_by_id, save_group_message, get_recent_group_messages, add_points_to_user
@@ -14,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Gemini client
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # Track AI chat sessions
 ai_sessions = {}
@@ -120,15 +119,16 @@ async def chat_with_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Generate response
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                types.Content(role="user", parts=[types.Part(text=user_input)])
-            ],
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            system_instruction=system_prompt
+        )
+        
+        response = model.generate_content(
+            user_input,
+            generation_config=genai.types.GenerationConfig(
                 max_output_tokens=1000,
-                temperature=0.7
+                temperature=0.7,
             )
         )
         
@@ -232,15 +232,16 @@ async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         prompt = f"Rangkum percakapan grup berikut:\n\n{conversation_text}"
         
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                types.Content(role="user", parts=[types.Part(text=prompt)])
-            ],
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
+        model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            system_instruction=system_prompt
+        )
+        
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
                 max_output_tokens=800,
-                temperature=0.5
+                temperature=0.5,
             )
         )
         
