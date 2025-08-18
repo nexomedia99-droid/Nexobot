@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexoBot Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/dashboard.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>NexoBot Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item">
+                    <span class="navbar-text">
+                        <i class="fas fa-circle text-success me-1"></i>
+                        <span id="status-indicator">Online</span>
+                    </span>
+                </div>
+                <div class="nav-item ms-3">
+                    <button class="btn btn-outline-light btn-sm" id="theme-toggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Stats Cards Row -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card border-left-primary">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="stat-title">Total Users</div>
+                                <div class="stat-value" id="total-users">-</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users stat-icon text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card border-left-success">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="stat-title">Active Jobs</div>
+                                <div class="stat-value" id="active-jobs">-</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-briefcase stat-icon text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card border-left-info">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="stat-title">AI Requests</div>
+                                <div class="stat-value" id="ai-requests">-</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-robot stat-icon text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card border-left-warning">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="stat-title">Total Points</div>
+                                <div class="stat-value" id="total-points">-</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-coins stat-icon text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-xl-8 col-lg-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-line me-2"></i>Activity Overview
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="activityChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-pie me-2"></i>Job Status Distribution
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="jobStatusChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables Row -->
+        <div class="row">
+            <!-- Recent Activities -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-list me-2"></i>Recent Activities
+                        </h6>
+                        <button class="btn btn-sm btn-primary" onclick="refreshActivities()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="activities-list" class="activity-list">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-server me-2"></i>System Status
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="system-status">
+                            <div class="status-item mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-clock me-2"></i>Uptime</span>
+                                    <span id="uptime" class="fw-bold">-</span>
+                                </div>
+                            </div>
+                            <div class="status-item mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-key me-2"></i>Bot Token</span>
+                                    <span id="bot-token-status">-</span>
+                                </div>
+                            </div>
+                            <div class="status-item mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-brain me-2"></i>Gemini API</span>
+                                    <span id="gemini-api-status">-</span>
+                                </div>
+                            </div>
+                            <div class="status-item mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-crown me-2"></i>Owner ID</span>
+                                    <span id="owner-id-status">-</span>
+                                </div>
+                            </div>
+                            <div class="status-item">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-clock me-2"></i>Last Activity</span>
+                                    <span id="last-activity" class="fw-bold">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Modal -->
+        <div class="modal fade" id="userModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-users me-2"></i>User Management
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="input-group" style="width: 300px;">
+                                <input type="text" class="form-control" id="user-search" placeholder="Search users...">
+                                <button class="btn btn-outline-secondary" onclick="searchUsers()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <button class="btn btn-primary" onclick="refreshUsers()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                        <div id="users-table" class="table-responsive">
+                            <!-- Users will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Management Modal -->
+        <div class="modal fade" id="jobModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-briefcase me-2"></i>Job Management
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="status-filter" id="all-jobs" value="" checked>
+                                <label class="btn btn-outline-primary" for="all-jobs">All</label>
+                                
+                                <input type="radio" class="btn-check" name="status-filter" id="active-jobs-filter" value="aktif">
+                                <label class="btn btn-outline-success" for="active-jobs-filter">Active</label>
+                                
+                                <input type="radio" class="btn-check" name="status-filter" id="closed-jobs" value="close">
+                                <label class="btn btn-outline-danger" for="closed-jobs">Closed</label>
+                                
+                                <input type="radio" class="btn-check" name="status-filter" id="paid-jobs" value="cair">
+                                <label class="btn btn-outline-warning" for="paid-jobs">Paid</label>
+                            </div>
+                            <button class="btn btn-primary" onclick="refreshJobs()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                        <div id="jobs-table" class="table-responsive">
+                            <!-- Jobs will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Floating Button -->
+    <div class="floating-actions">
+        <button class="btn btn-primary btn-floating" data-bs-toggle="dropdown">
+            <i class="fas fa-plus"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#" onclick="showUserModal()">
+                <i class="fas fa-users me-2"></i>Manage Users
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="showJobModal()">
+                <i class="fas fa-briefcase me-2"></i>Manage Jobs
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="refreshAllData()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh All
+            </a></li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
