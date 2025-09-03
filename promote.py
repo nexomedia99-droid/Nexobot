@@ -93,12 +93,16 @@ async def promote_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup,
         parse_mode="HTML"
     )
-    # 6. Jadwalkan auto-delete setelah 24 jam
-    context.job_queue.run_once(
-        delete_promotion_message,
-        when=24*60*60,  # 24 jam dalam detik
-        data={"chat_id": GROUP_ID, "message_id": sent_message.message_id}
-    )
+    # 6. Jadwalkan auto-delete setelah 24 jam (jika JobQueue tersedia)
+    try:
+        if context.job_queue:
+            context.job_queue.run_once(
+                delete_promotion_message,
+                when=24*60*60,  # 24 jam dalam detik
+                data={"chat_id": GROUP_ID, "message_id": sent_message.message_id}
+            )
+    except Exception as e:
+        print(f"Warning: Auto-delete scheduling failed: {e}")
 
 
 # =======================================================================
@@ -190,12 +194,16 @@ async def promote_special_command(update: Update, context: ContextTypes.DEFAULT_
         message_id=sent_message.message_id
     )
 
-    # Jadwalkan auto-unpin 3 hari
-    context.job_queue.run_once(
-        unpin_message,
-        when=2*24*60*60,  # 2 hari dalam detik
-        data={"chat_id": GROUP_ID, "message_id": sent_message.message_id}
-    )
+    # Jadwalkan auto-unpin 2 hari (jika JobQueue tersedia)
+    try:
+        if context.job_queue:
+            context.job_queue.run_once(
+                unpin_message,
+                when=2*24*60*60,  # 2 hari dalam detik
+                data={"chat_id": GROUP_ID, "message_id": sent_message.message_id}
+            )
+    except Exception as e:
+        print(f"Warning: Auto-unpin scheduling failed: {e}")
     # Info terakhir ke user
     await update.message.reply_text(
         "✅ Promosi Spesial Anda telah berhasil diposting dan disematkan di grup."
@@ -249,7 +257,7 @@ async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_T
             owner_username = promo_owner['username'] if promo_owner else "Unknown"
 
             # Kirim pesan dengan link dan info poin
-            await context.bot.send_message(
+            dm_message = await context.bot.send_message(
                 chat_id=user_id,
                 text=(
                     f"🎉 <b>Terima kasih sudah support @{owner_username}!</b>\n\n"
@@ -262,8 +270,12 @@ async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_T
                 ),
                 parse_mode="HTML"
             )
+            print(f"✅ DM berhasil dikirim ke user {user_id}, message_id: {dm_message.message_id}")
+            
         except Exception as e:
-            print(f"Gagal mengirim DM ke pengguna {user_id}: {e}")
+            print(f"❌ Gagal mengirim DM ke pengguna {user_id}: {e}")
+            # Tetap berikan feedback meski DM gagal
+            await query.answer("⚠️ Poin ditambahkan, tapi DM gagal terkirim. Silakan hubungi admin untuk link.", show_alert=True)
 
         # 5. Kirim pop-up konfirmasi (bukan edit tombol)
         await query.answer("✅ Poin berhasil ditambahkan. Silakan cek DM dari saya untuk tautannya!")

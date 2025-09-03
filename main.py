@@ -46,8 +46,9 @@ def main():
         ensure_env()
         print("✅ Environment variables validated")
 
-        # Create application
-        application = Application.builder().token(BOT_TOKEN).build()
+        # Create application with JobQueue
+        from telegram.ext import JobQueue
+        application = Application.builder().token(BOT_TOKEN).job_queue(JobQueue()).build()
 
         # Conversation handler untuk register
         conv_handler = ConversationHandler(
