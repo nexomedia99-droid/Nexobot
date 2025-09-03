@@ -7,7 +7,7 @@ from db import (
 )
 from utils import sanitize_input, get_user_display_name
 from dashboard import log_activity
-import logging
+import logging, re
 
 logger = logging.getLogger(__name__)
 
@@ -116,52 +116,71 @@ async def memberinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.error(f"Failed to get member info: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mengambil info member.")
 
+#==========PAYMENT INFO===========
 @admin_only
 async def paymentinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Get payment information for members"""
     if not context.args:
         await update.message.reply_text(
-            "💳 *Penggunaan:*\n"
-            "`/paymentinfo <username1> <username2> ...`",
-            parse_mode="Markdown"
+            "💳 <b>Penggunaan:</b>\n"
+            "<code>/paymentinfo &lt;username1&gt; &lt;username2&gt; ...</code>\n"
+            "atau:\n"
+            "<code>/paymentinfo\\nuser1\\nuser2\\nuser3</code>",
+            parse_mode="HTML"
         )
         return
-    
+
     try:
-        usernames = [sanitize_input(arg) for arg in context.args]
+        # Gabungkan semua argumen menjadi satu string
+        raw_text = " ".join(context.args)
+
+        # Split per baris, hapus angka/titik, dan strip spasi
+        usernames = []
+        for line in raw_text.splitlines():
+            cleaned = re.sub(r'^\d+\.\s*', '', line).strip()  # hapus "1. " dkk
+            if cleaned:
+                usernames.append(sanitize_input(cleaned))
+
         users = []
         not_found = []
-        
+
         for username in usernames:
             user = get_user_by_username(username)
             if user:
                 users.append(user)
             else:
                 not_found.append(username)
-        
+
         if not_found:
             await update.message.reply_text(
                 f"❌ Username tidak ditemukan: {', '.join(not_found)}"
             )
             return
-        
-        text = "💳 *Info Payment Member*\n\n"
-        
+
+        text = "💳 <b>Info Payment Member</b>\n\n"
+
         for i, user in enumerate(users, 1):
+            whatsapp = user.get('whatsapp', '-')
+            method = user.get('payment_method', '-')
+            number = user.get('payment_number', '-')
+            owner = user.get('owner_name', '-')
+
             text += (
-                f"**{i}. {user['username']}**\n"
-                f"💳 Metode: {user['payment_method']}\n"
-                f"🔢 Nomor: `{user['payment_number']}`\n"
-                f"📝 A/n: {user['owner_name']}\n"
-                f"☎️ WhatsApp: `{user['whatsapp']}`\n\n"
+                f"<b>{i}. {user['username']}</b>\n"
+                f"💳 Metode: {method}\n"
+                f"🔢 Nomor: <code>{number}</code>\n"
+                f"📝 A/n: {owner}\n"
+                f"☎️ WhatsApp: <code>{whatsapp}</code>\n\n"
             )
-        
-        await update.message.reply_text(text, parse_mode="Markdown")
-        
+
+        await update.message.reply_text(text, parse_mode="HTML")
+
     except Exception as e:
         logger.error(f"Failed to get payment info: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mengambil info payment.")
 
+
+#=====DELETE MEMBER=====
 @admin_only
 async def delete_member_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Delete members from database"""
@@ -383,3 +402,118 @@ async def resetbadge_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     except Exception as e:
         logger.error(f"Failed to reset badges: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mereset badge.")
+
+
+#=========ADD POINTS=========
+@admin_only
+async def addpoint_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Tambah poin manual ke banyak user.
+    Format yang didukung:
+    1) /addpoint | <jumlah> | <username1> <username2> ...
+    2) /addpoint <jumlah> <username1> <username2> ...
+    Username bisa dipisah dengan spasi, baris baru, atau diberi nomor urut (1. user1).
+    """
+    text = (update.message.text or "").strip()
+
+    # Hilangkan '/addpoint' dari awal agar parsing lebih mudah
+    after_cmd = ""
+    parts = text.split(maxsplit=1)
+    if len(parts) == 2:
+        after_cmd = parts[1].strip()
+
+    amount_str = None
+    usernames_raw = ""
+
+    # Mode dengan pipa: /addpoint | 10 | user1 user2
+    if "|" in after_cmd:
+        pipe_parts = [p.strip() for p in after_cmd.split("|") if p.strip()]
+        if len(pipe_parts) < 2:
+            return await update.message.reply_text(
+                "❌ Format salah.\nContoh: `/addpoint | 25 | user1 user2`",
+                parse_mode="Markdown"
+            )
+        amount_str = pipe_parts[0]
+        usernames_raw = " ".join(pipe_parts[1:]).strip()
+    else:
+        # Mode tanpa pipa: /addpoint 10 user1 user2
+        args = after_cmd.split()
+        if len(args) < 2:
+            return await update.message.reply_text(
+                "🔧 *Penggunaan:*\n"
+                "`/addpoint | <jumlah> | <username1> <username2> ...`\n"
+                "atau\n"
+                "`/addpoint <jumlah> <username1> <username2> ...`",
+                parse_mode="Markdown"
+            )
+        amount_str = args[0]
+        usernames_raw = " ".join(args[1:])
+
+    # Validasi jumlah poin
+    try:
+        amount = int(amount_str)
+        if amount <= 0:
+            return await update.message.reply_text("❌ Jumlah poin harus lebih dari 0.")
+    except ValueError:
+        return await update.message.reply_text("❌ Jumlah poin harus berupa angka bulat.")
+
+    # Kumpulkan username unik
+    usernames = []
+    seen = set()
+    for raw in usernames_raw.split():
+        # Buang format angka di depan (contoh: "1.", "2)")
+        cleaned = re.sub(r'^\d+[\.\)]*', '', raw).strip()
+        su = sanitize_input(cleaned)
+        if su and su not in seen:
+            seen.add(su)
+            usernames.append(su)
+
+    if not usernames:
+        return await update.message.reply_text("❌ Harus mencantumkan minimal 1 username.")
+
+    updated, not_found, failed = [], [], []
+
+    for uname in usernames:
+        try:
+            user = get_user_by_username(uname)
+            if not user:
+                not_found.append(uname)
+                continue
+
+            add_points_to_user(user['user_id'], amount)
+            updated.append(uname)
+
+            # Log + coba DM user
+            try:
+                new_total = user['points'] + amount  # asumsinya kolom points di DB
+                await context.bot.send_message(
+                    chat_id=user['user_id'],
+                    text=(
+                        f"🎉 Selamat *{uname}*!\n"
+                        f"Kamu baru saja mendapatkan *+{amount}* poin dari Admin.\n\n"
+                        f"🏆 Total poinmu sekarang: *{new_total}*"
+                    ),
+                    parse_mode="Markdown"
+                )
+            except Exception:
+                pass
+
+            log_activity("add_points", user['user_id'], f"Added {amount} points to {uname}")
+
+        except Exception as e:
+            logger.error(f"Failed to add points for {uname}: {e}")
+            failed.append(uname)
+
+    # Susun hasil balasan
+    lines = []
+    if updated:
+        lines.append("✅ Berhasil menambahkan *{}* poin ke:\n- {}".format(
+            amount, "\n- ".join(updated)
+        ))
+    if not_found:
+        lines.append("❌ Username tidak ditemukan:\n- {}".format("\n- ".join(not_found)))
+    if failed:
+        lines.append("⚠️ Gagal diproses:\n- {}".format("\n- ".join(failed)))
+
+    await update.message.reply_text("\n\n".join(lines), parse_mode="Markdown")
+

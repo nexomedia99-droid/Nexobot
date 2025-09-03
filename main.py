@@ -4,10 +4,10 @@ from dashboard import start_dashboard, log_activity
 import logging
 from telegram.ext import (
     Application, CommandHandler, MessageHandler,
-    CallbackQueryHandler, filters, ConversationHandler, ContextTypes
+    CallbackQueryHandler, filters, ConversationHandler
 )
 from utils import ensure_env, BOT_TOKEN
-from start import start, menu_command, button_handler, new_member_handler, hidden_tag_handler
+from start import start, button_handler, check_milestone, new_member_handler, left_member_handler, hidden_tag_handler
 from register import (
     register_command, username_step, referral_step, whatsapp_step, telegram_step,
     payment_method_step, payment_number_step, owner_name_step,
@@ -17,8 +17,14 @@ from register import (
     USERNAME, REFERRAL, WHATSAPP, TELEGRAM, PAYMENT_METHOD, PAYMENT_NUMBER, OWNER_NAME,
     CHOOSE_FIELD, EDIT_USERNAME, EDIT_WHATSAPP, EDIT_TELEGRAM, EDIT_PAYMENT_METHOD, EDIT_PAYMENT_NUMBER, EDIT_OWNER_NAME
 )
+from promote import (
+    promote_command,
+    promote_special_command,
+    cek_followers_command,
+    promote_button_handler
+)
 from ai import chat_with_ai, stop_ai_chat, start_ai_chat, save_group_messages, summary_command, group_activity_points
-from admin import listmember_command, paymentinfo_command, memberinfo_command, delete_member_command, resetpoint_command, addbadge_command, resetapply_command, resetbadge_command
+from admin import listmember_command, paymentinfo_command, memberinfo_command, delete_member_command, resetpoint_command, addbadge_command, resetapply_command, resetbadge_command, addpoint_command
 from jobs import postjob_conv, postjob_command, updatejob_command, resetjob_command, pelamarjob_command, listjob_command, infojob_command, apply_button
 from help import help_command
 from leaderboard import leaderboard_command, points_command
@@ -104,19 +110,29 @@ def main():
 
         # Apply button
         application.add_handler(CallbackQueryHandler(apply_button, pattern=r"^apply_\d+$"))
+        # Khusus tombol promote
+        application.add_handler(CallbackQueryHandler(promote_button_handler, pattern=r"^promote_"))
+        # Tombol start
+        application.add_handler(CallbackQueryHandler(button_handler))
         
-        # Menu & Start commands
+        #Start commands
         application.add_handler(
             CommandHandler("start", start, filters=filters.ChatType.PRIVATE)
         )
         application.add_handler(
             CommandHandler("start", lambda u, c: u.message.reply_text("❌ Command /start hanya bisa digunakan di private chat (DM bot)."), filters=filters.ChatType.GROUPS)
         )
-        application.add_handler(CommandHandler("menu", menu_command))
-        application.add_handler(CallbackQueryHandler(button_handler))
+
+        # Promote commands
+        application.add_handler(CommandHandler("promote", promote_command))
+        application.add_handler(CommandHandler("promote_special", promote_special_command))
+        application.add_handler(CommandHandler("cek_followers", cek_followers_command))
 
         # Special Messages
+        # Member join
         application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member_handler))
+        # Member keluar
+        application.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member_handler))
         application.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^\..+'), hidden_tag_handler))
 
         # AI Features
@@ -148,6 +164,8 @@ def main():
         application.add_handler(CommandHandler("help", help_command))
         application.add_handler(CommandHandler("leaderboard", leaderboard_command))
         application.add_handler(CommandHandler("points", points_command))
+        application.add_handler(CommandHandler("addpoint", addpoint_command))
+
 
         # Start services
         keep_alive()

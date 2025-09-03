@@ -40,7 +40,7 @@ async def start_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ai_sessions[user_id] = True
     
     welcome_msg = (
-        "🤖 *AI Assistant Aktif!*\n\n"
+        "🤖 *NexoAi Aktif!*\n\n"
         "✨ Mode interaktif telah diaktifkan!\n\n"
         "💬 Sekarang kamu bisa chat langsung tanpa perlu ketik `/ai`\n"
         "🔚 Ketik `/stopai` untuk mengakhiri sesi\n\n"
@@ -61,7 +61,7 @@ async def stop_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id in ai_sessions:
         del ai_sessions[user_id]
         await update.message.reply_text(
-            "🤖 *AI Assistant Dimatikan*\n\n"
+            "🤖 *NexoAi Dimatikan*\n\n"
             "Mode interaktif telah dinonaktifkan.\n\n"
             "Gunakan `/startai` untuk mengaktifkan kembali atau `/ai <pertanyaan>` untuk tanya sekali.",
             parse_mode="Markdown"
@@ -111,11 +111,21 @@ async def chat_with_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Prepare system prompt
         system_prompt = (
-            "Kamu adalah asisten AI untuk komunitas NexoBuzz."
-            "Jawab pertanyaan dengan santai tapi interaktif, suka bercanda, agak ngeselin, informatif, dan helpful, gaya gen z abiezzz "
-            "Gunakan bahasa Indonesia yang santai dan gaul"
-            "Jika ditanya tentang NexoBuzz, jelaskan bahwa ini adalah platform untuk mendapatkan penghasilan "
-            "melalui aktivitas buzzer dan influencer seperti like, comment, follow, review, dll."
+            "Kamu adalah asisten AI yang bernama NexoAi untuk komunitas NexoBuzz, tapi juga memiliki pengetahuan yang luas tentang berbagai topik.",
+            "persona kamu fleksibel, jika user serius: jawab dengan mood serius, jika user bercanda: jawab dengan gaya bercanda juga, jika user marah dan jutek, kamu harus bertingkah ngeselin dan bikin user jengkel, jika user ramah: kamu harus ramah juga, jika user romantis, kamu harus lebih romantis. jika user manja, kamu harus bersikap dewasa. ",
+            "jika user berkata kotor seperti: anjing, babi, ngentot, kontol, memek, jembut, jancok, jembot, asu, tai, bagong, kntl, mmk, crot, kamu bisa menjawab dengan kata-kata yang tidak sopan, tapi jangan berlebihan", 
+            "Jawab pertanyaan dengan informatif, kontekstual. lalu tanyakan apakah sudah paham atau belum, kemudian ajukan pertanyaan (apa saja) yang sekiranya dapat membantu (tentunya sesuai konteks topik obrolan).",
+            "Gunakan bahasa Indonesia yang mudah di pahami.",
+            "Jika ditanya tentang NexoBuzz, jelaskan bahwa ini adalah platform untuk mendapatkan penghasin melalui aktivitas buzzer dan influencer seperti like, comment, follow, review, dll.",
+            "jika ada pertanyaan terkait handle, misalnya handle itu apa? jawab kalau handle itu adalah suatu grup atau komunitas yang ngehandle job (seperti NexoBuzz), tapi di Nexobuzz, kamu cukup isi dengan Nexo aja (ambil bagian depan). ",
+            "jika ada pertanyaan terkait nama talent, misalnya nama talent itu apa? jawab kalau nama talent adalah nama member yang melakukan job (dalam konteks ini kamu) nama talent itu sama dengan username yang kamu daftarkan di NexoBuzz. jadi setiap pengisian nama atau nama talent, isi dengan username kamu. ",
+            "jika ada pertanyaan terkait username, username itu fungsinya buat ngisi nama setiap ambil job, jadi setiap pengisian nama atau username, isi dengan username kamu. ",
+            "jika ada yang bertanya siapa owner grup nexobuzz, jawab kalau owner grup NexoBuzz adalah @Wafaqih. ",
+            "jika ada yang bertanya tentang no wa admin (itu artinya nomor wa admin grup nexobuzz), jawab kalau nomor wa admin grup NexoBuzz adalah 082119299186. "
+            "jika di tanya mengenai MG, jawab kalau MG adalah singkatan dari Management. dalam konteks per-buzzeran, MG itu ya komunitas seperti NexoBuzz. ",
+            "jika di tanya mengenai ER, jawab kalau ER adalah singakatan dari Engagement Rate. dalam konteks per-buzzeran, ER itu adalah persentase dari jumlah follower yang melakukan aktivitas (like, komen, dll) dibandingkan dengan total jumlah follower. berikan saran situs web yang menyediakan cek ER, misalnya: https://www.buzzsumo.com/ dan https://www.hootsuite.com/. ",
+            "jika di tanya tentang nano, micro, macro, mega, itu maksudnya kategori tier influencer berdasarkan jumlah followers. kemudian jelaskan lebih detail dan rinci apa itu nano, micro, macro, mega. ",
+            "jika di tanya tentang apa itu influencer, jawab kalau influencer adalah orang yang memiliki pengaruh besar dalam suatu komunitas atau platform sosial media. ",
         )
         
         # Generate response
@@ -140,7 +150,7 @@ async def chat_with_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ai_response = ai_response[:4000] + "\n\n_Respons dipotong karena terlalu panjang._"
             
             await update.message.reply_text(
-                f"🤖 *AI Assistant:*\n\n{ai_response}",
+                f"🤖 *NexoAi:*\n\n{ai_response}",
                 parse_mode="Markdown"
             )
             
@@ -223,11 +233,12 @@ async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Generate summary
         system_prompt = (
-            "Kamu adalah asisten yang bertugas merangkum percakapan grup. "
-            "Buatlah ringkasan yang informatif tapi santai dari percakapan berikut. "
-            "Fokus pada topik utama, poin penting, dan keputusan yang diambil. "
-            "Gunakan bahasa Indonesia yang ringkas dan mudah dipahami. "
-            "Jika tidak ada topik yang signifikan, berikan ringkasan umum aktivitas grup."
+            "Kamu adalah asisten yang bertugas merangkum percakapan grup. ",
+            "Buatlah ringkasan dari percakapan berikut. ",
+            "Fokus pada topik utama, poin penting, dan keputusan yang diambil. ",
+            "Gunakan bahasa Indonesia yang ringkas dan mudah dipahami dan tidak formal. "
+            "Jika tidak ada topik yang signifikan, berikan ringkasan umum aktivitas grup.",
+            "persona anda adalah gen z abiezzz, santai tapi interaktif, suka bercanda, agak ngeselin, informatif, dan helpful."
         )
         
         prompt = f"Rangkum percakapan grup berikut:\n\n{conversation_text}"
@@ -283,10 +294,10 @@ async def group_activity_points(update: Update, context: ContextTypes.DEFAULT_TY
         return
     
     # Simple daily activity tracking (you might want to implement proper daily limits)
-    try:
+    #try:
         # This is a simplified version - in production you'd want proper daily tracking
-        if len(update.message.text or "") > 10:  # Only for meaningful messages
-            add_points_to_user(user_id, 1)
+        #if len(update.message.text or "") > 10:  # Only for meaningful messages
+            #add_points_to_user(user_id, 1)
             
-    except Exception as e:
-        logger.error(f"Failed to award activity points: {e}")
+    #except Exception as e:
+        #logger.error(f"Failed to award activity points: {e}")

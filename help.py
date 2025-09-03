@@ -12,6 +12,8 @@ Selamat datang di *NexoBot*! Berikut adalah panduan lengkap fitur yang tersedia:
 • `/editinfo` — Edit data member
 • `/points` — Cek poin dan cara mendapatkannya
 • `/myreferral` — Info referral dan bonus
+• `/promote` — promosikan sosial media kamu
+• `/promote_special` — promosikan sosial media kamu dengan bonus
 
 💼 *JOB COMMANDS*
 • `/listjob` — Daftar semua job tersedia
@@ -33,6 +35,7 @@ Selamat datang di *NexoBot*! Berikut adalah panduan lengkap fitur yang tersedia:
 • `/memberinfo <username>` — Info detail member
 • `/paymentinfo <username>` — Info payment member
 • `/delete <username>` — Hapus member
+• `/addpoint <username>` — menambah poin member
 • `/resetpoint <username>` — Reset poin member
 • `/addbadge <username> <badge>` — Tambah badge
 • `/postjob` — Posting job baru
@@ -42,9 +45,10 @@ Selamat datang di *NexoBot*! Berikut adalah panduan lengkap fitur yang tersedia:
 
 💡 *TIPS & TRIK*
 1. **Earning Points:**
-   • Apply job: +2 poin
+   • Apply job: +2-5 poin
    • Aktif di grup: +1 poin
    • Referral berhasil: +25 poin
+   • follow sosmed: +1 poin
 
 2. **Badge System:**
    • 🚀 Rising Star: Apply job pertama
@@ -55,16 +59,17 @@ Selamat datang di *NexoBot*! Berikut adalah panduan lengkap fitur yang tersedia:
 3. **Referral Program:**
    • Bagikan username kamu sebagai kode referral
    • Dapatkan 25 poin setiap referral berhasil
-   • User baru dapat bonus 15 poin tambahan
+   • User baru dapat bonus 10 poin tambahan
 
 ⚠️ *CATATAN PENTING*
 • Registrasi dan AI interaktif hanya di private chat
 • Apply job memerlukan registrasi terlebih dahulu
 • Semua notifikasi job dikirim via private chat
 • 1 poin = Rp 10 (informasi saja)
+• 1 poin bisa di cairkan dengan minimal 500 poin
 
 🔗 *DUKUNGAN*
-Butuh bantuan? Hubungi admin grup atau gunakan `/ai` untuk pertanyaan umum.
+Butuh bantuan? Hubungi admin grup atau gunakan `/ai` untuk pertanyaan umum dan istilah-istilah yang tidak di mengerti di dunia perbuzzeran.
 
 —
 *NexoBuzz - Your Gateway to Digital Opportunities* ✨

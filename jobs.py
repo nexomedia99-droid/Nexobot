@@ -6,17 +6,12 @@ from db import (
     get_user_by_id, add_badge_to_user, has_badge, get_total_applies, add_points_to_user, get_conn
 )
 from dashboard import log_activity
-from utils import sanitize_input, get_user_display_name
+from utils import sanitize_input, get_user_display_name, GROUP_ID, BUZZER_TOPIC_ID, INFLUENCER_TOPIC_ID, PAYMENT_TOPIC_ID
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
-# ======== CONFIG ========
-GROUP_ID = -1002777157241
-BUZZER_TOPIC_ID = 2
-INFLUENCER_TOPIC_ID = 3
-PAYMENT_TOPIC_ID = 11
 
 # ======== POST JOB CONVERSATION STATES ========
 POSTJOB_TITLE, POSTJOB_FEE, POSTJOB_DESC, POSTJOB_TOPIC = range(4)
@@ -358,8 +353,7 @@ async def pelamarjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             user = get_user_by_id(user_id)
             if user:
                 username = user['username']
-                points = user.get('points', 0)
-                text += f"{i}. {username} ({points} poin)\n"
+                text += f"{i}. {username}\n"
             else:
                 text += f"{i}. User {user_id} (data tidak ditemukan)\n"
 
@@ -540,9 +534,6 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Add user as applicant
         add_applicant(job_id, user_id)
         
-        # Award points for applying
-        add_points_to_user(user_id, 2)
-        
         # Check and award achievement badges
         total_applies = get_total_applies(user_id)
         
@@ -595,7 +586,7 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🆔 **ID:** {job_id}\n"
                 f"💰 **Fee:** {job['fee']}\n\n"
                 f"🎯 **Posisi Kamu:** #{user_position} dari {total_applicants} pelamar\n"
-                f"💰 **Bonus:** +2 poin\n\n"
+                f"💰 **Bonus:** +2 poin akan di tambahkan setelah selesai mengerjakan job\n\n"
                 f"📋 **Daftar Pelamar Saat Ini:**\n"
             )
             

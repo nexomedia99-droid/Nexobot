@@ -135,7 +135,7 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         msg = f"💰 *POINT DASHBOARD*\n\n"
         msg += f"👤 **{username}**\n"
-        msg += f"💰 **Current Points:** {points:,}\n"
+        msg += f"💰 **Point Sekarang:** {points:,}\n"
         msg += f"📊 **Ranking:** #{user_rank} dari {len(all_users)}\n"
         msg += f"💵 **Nilai Tukar:** {format_currency(points * 10)}\n\n"
         
@@ -146,8 +146,9 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg += f"⚡ Activity Points: {points - referral_points:,} poin\n\n"
         
         msg += f"💡 *CARA MENDAPAT POIN*\n"
-        msg += f"• Apply job: +2 poin\n"
+        msg += f"• Apply job: +2-5 poin\n"
         msg += f"• Aktif di grup: +1 poin\n"
+        msg += f"• Follow Sosmed +1 poin\n"
         msg += f"• Referral berhasil: +25 poin\n"
         
         msg += f"🎯 *NEXT GOALS*\n"

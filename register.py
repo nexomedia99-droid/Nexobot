@@ -90,7 +90,7 @@ async def username_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💰 *Benefit Referral:*\n"
         "• Referrer mendapat +25 poin\n"
         "• Kamu mendapat bonus poin awal\n\n"
-        "Ketik username referrer atau `Skip` jika tidak ada:",
+        "Ketik username referrer atau *_Skip_* jika tidak ada:",
         parse_mode="Markdown"
     )
     return REFERRAL
@@ -179,8 +179,8 @@ async def telegram_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     keyboard = [
         [
-            InlineKeyboardButton("💳 Dana", callback_data="payment:Dana"),
-            InlineKeyboardButton("🏦 Seabank", callback_data="payment:Seabank")
+            InlineKeyboardButton("💳 Dana", callback_data="Dana"),
+            InlineKeyboardButton("🏦 Seabank", callback_data="Seabank")
         ],
     ]
     
@@ -252,7 +252,7 @@ async def owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 add_points_to_user(referrer_user_id, 25)
                 
                 # Give extra welcome bonus to new user
-                add_points_to_user(user_id, 15)  # Total 25 points for referred users
+                add_points_to_user(user_id, 10)  # Total 25 points for referred users
                 
                 # Notify referrer
                 try:
@@ -283,7 +283,7 @@ async def owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         log_activity("registration", user_id, f"New member registered: {data['username']}")
 
         # Success message
-        total_points = 25 if referrer_user_id else 5
+        total_points = 10 if referrer_user_id else 5
         summary = (
             "🎉 *Pendaftaran Berhasil!*\n\n"
             f"👤 *Username:* `{data['username']}`\n"
@@ -337,7 +337,7 @@ async def editinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("💳 Metode Payment", callback_data="edit_payment_method")],
         [InlineKeyboardButton("🔢 Nomor Payment", callback_data="edit_payment_number")],
         [InlineKeyboardButton("📝 Nama Pemilik", callback_data="edit_owner_name")],
-        [InlineKeyboardButton("✅ Selesai", callback_data="edit_done")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="edit_cancel")],
     ]
     
     await update.message.reply_text(
@@ -380,16 +380,14 @@ async def choose_field_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     elif query.data == "edit_payment_method":
         keyboard = [
-            [
-                InlineKeyboardButton("💳 Dana", callback_data="payment:Dana"),
-                InlineKeyboardButton("🏦 Seabank", callback_data="payment:Seabank")
-            ],
+            [InlineKeyboardButton("💳 Dana", callback_data="Dana")],
+            [InlineKeyboardButton("🏦 Seabank", callback_data="Seabank")]
         ]
         await query.edit_message_text(
-            "💳 *Edit Metode Payment*\n\n"
+            "💳 <b>Edit Metode Payment</b>\n\n"
             "Pilih metode pembayaran baru:",
             reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
+            parse_mode="HTML"
         )
         return EDIT_PAYMENT_METHOD
         
@@ -409,10 +407,10 @@ async def choose_field_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return EDIT_OWNER_NAME
         
-    elif query.data == "edit_done":
+    elif query.data == "edit_cancel":
         await query.edit_message_text(
-            "✅ *Edit Selesai*\n\n"
-            "Data kamu sudah diperbarui!\n\n"
+            "‼️ *Pengeditan di batalkan*\n\n"
+            "tidak ada data yang di ubah!\n\n"
             "Gunakan `/myinfo` untuk melihat data terbaru.",
             parse_mode="Markdown"
         )
@@ -422,135 +420,152 @@ async def edit_username_step(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Handle username edit"""
     new_username = sanitize_input(update.message.text.strip())
     user_id = str(update.effective_user.id)
-    
+
     # Validation
     if len(new_username) < 3:
         await update.message.reply_text("❌ Username minimal 3 karakter. Coba lagi:")
         return EDIT_USERNAME
-    
+
     if get_user_by_username(new_username):
         await update.message.reply_text("❌ Username sudah dipakai member lain. Pilih yang lain:")
         return EDIT_USERNAME
-    
+
     data = get_user_by_id(user_id)
     old_username = data['username']
     data['username'] = new_username
     add_user(user_id, data)
-    
+
     log_activity("edit_info", user_id, f"Username changed from {old_username} to {new_username}")
-    
+
     await update.message.reply_text(
         f"✅ *Username Berhasil Diubah*\n\n"
         f"Username baru: `{new_username}`",
         parse_mode="Markdown"
     )
-    return await editinfo_command(update, context)
+    return ConversationHandler.END
+
 
 async def edit_whatsapp_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle WhatsApp edit"""
     new_whatsapp = sanitize_input(update.message.text.strip())
     validated_phone = validate_phone_number(new_whatsapp)
-    
+
     if not validated_phone:
         await update.message.reply_text("❌ Format nomor tidak valid. Coba lagi:")
         return EDIT_WHATSAPP
-    
+
     user_id = str(update.effective_user.id)
     data = get_user_by_id(user_id)
     data['whatsapp'] = validated_phone
     add_user(user_id, data)
-    
+
     log_activity("edit_info", user_id, "WhatsApp number updated")
-    
+
     await update.message.reply_text(
         f"✅ *Nomor WhatsApp Berhasil Diubah*\n\n"
         f"Nomor baru: `{validated_phone}`",
         parse_mode="Markdown"
     )
-    return await editinfo_command(update, context)
+    return ConversationHandler.END
 
 async def edit_telegram_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle Telegram edit"""
     new_telegram = sanitize_input(update.message.text.strip())
     validated_phone = validate_phone_number(new_telegram)
-    
+
     if not validated_phone:
         await update.message.reply_text("❌ Format nomor tidak valid. Coba lagi:")
         return EDIT_TELEGRAM
-    
+
     user_id = str(update.effective_user.id)
     data = get_user_by_id(user_id)
     data['telegram'] = validated_phone
     add_user(user_id, data)
-    
+
     log_activity("edit_info", user_id, "Telegram number updated")
-    
+
     await update.message.reply_text(
         f"✅ *Nomor Telegram Berhasil Diubah*\n\n"
         f"Nomor baru: `{validated_phone}`",
         parse_mode="Markdown"
     )
-    return await editinfo_command(update, context)
+    return ConversationHandler.END
 
 async def edit_payment_method_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle payment method edit"""
     query = update.callback_query
     await query.answer()
-
-    if not query.data.startswith("payment:"):
-        return  # Bukan untuk edit payment
-
-    method = query.data.split(":", 1)[1]  # ambil setelah "payment:"
 
     user_id = str(query.from_user.id)
     data = get_user_by_id(user_id)
     old_method = data['payment_method']
-    data['payment_method'] = method
+    data['payment_method'] = query.data
     add_user(user_id, data)
 
-    log_activity("edit_info", user_id, f"Payment method changed from {old_method} to {method}")
+    log_activity("edit_info", user_id, f"Payment method changed from {old_method} to {query.data}")
 
     await query.edit_message_text(
         f"✅ *Metode Payment Berhasil Diubah*\n\n"
-        f"Metode baru: {method}",
+        f"Metode baru: {query.data}",
         parse_mode="Markdown"
     )
-    return await editinfo_command(query, context)
+    return ConversationHandler.END
 
+async def edit_payment_number_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle payment number edit"""
+    new_payment_number = sanitize_input(update.message.text.strip())
+
+    if len(new_payment_number) < 8:
+        await update.message.reply_text("❌ Nomor payment terlalu pendek. Coba lagi:")
+        return EDIT_PAYMENT_NUMBER
+
+    user_id = str(update.effective_user.id)
+    data = get_user_by_id(user_id)
+    data['payment_number'] = new_payment_number
+    add_user(user_id, data)
+
+    log_activity("edit_info", user_id, "Payment number updated")
+
+    await update.message.reply_text(
+        f"✅ *Nomor Payment Berhasil Diubah*\n\n"
+        f"Nomor baru: `{new_payment_number}`",
+        parse_mode="Markdown"
+    )
+    return ConversationHandler.END
 
 async def edit_owner_name_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle owner name edit"""
     new_owner_name = sanitize_input(update.message.text.strip())
-    
+
     if len(new_owner_name) < 2:
         await update.message.reply_text("❌ Nama terlalu pendek. Coba lagi:")
         return EDIT_OWNER_NAME
-    
+
     user_id = str(update.effective_user.id)
     data = get_user_by_id(user_id)
     data['owner_name'] = new_owner_name
     add_user(user_id, data)
-    
+
     log_activity("edit_info", user_id, "Owner name updated")
-    
+
     await update.message.reply_text(
         f"✅ *Nama Pemilik Berhasil Diubah*\n\n"
         f"Nama baru: {new_owner_name}",
         parse_mode="Markdown"
     )
-    return await editinfo_command(update, context)
+    return ConversationHandler.END
 
-# ========== INFO COMMANDS ==========
-
+# ========== MYINFO COMMANDS ==========
 async def myinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show user information"""
     user_id = str(update.effective_user.id)
     data = get_user_by_id(user_id)
-    
+
     if not data:
         await update.message.reply_text(
-            "❌ *Kamu Belum Terdaftar*\n\n"
-            "Gunakan `/register` untuk mendaftar sebagai member.",
-            parse_mode="Markdown"
+            "❌ <b>Kamu Belum Terdaftar</b>\n\n"
+            "Gunakan <code>/register</code> untuk mendaftar sebagai member.",
+            parse_mode="HTML"
         )
         return
 
@@ -558,30 +573,31 @@ async def myinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     referrer = data.get('referrer', 'Tidak ada')
     badges = get_badges(user_id)
     badge_text = " | ".join(badges) if badges else "Belum ada"
-    
+
     # Get referral statistics
     referrals = get_referrals_by_username(data['username'])
     referral_count = len(referrals)
-    
-    summary = (
-        "👤 *Profil Member*\n\n"
-        f"👤 **Username:** `{data['username']}`\n"
-        f"🏅 **Badge:** {badge_text}\n"
-        f"💰 **Points:** {points}\n"
-        f"👥 **Referrals:** {referral_count} orang\n"
-        f"🔗 **Direferensi oleh:** {referrer}\n\n"
-        "📞 *Kontak:*\n"
-        f"☎️ WhatsApp: `{data['whatsapp']}`\n"
-        f"📱 Telegram: `{data['telegram']}`\n\n"
-        "💳 *Payment Info:*\n"
-        f"💳 Metode: {data['payment_method']}\n"
-        f"🔢 Nomor: `{data['payment_number']}`\n"
-        f"📝 A/n: {data['owner_name']}\n\n"
-        "⚙️ Gunakan `/editinfo` untuk mengubah data"
-    )
-    
-    await update.message.reply_text(summary, parse_mode="Markdown")
 
+    summary = (
+        "👤 <b>Profil Member</b>\n\n"
+        f"👤 <b>Username:</b> <code>{data['username']}</code>\n"
+        f"🏅 <b>Badge:</b> {badge_text}\n"
+        f"💰 <b>Points:</b> {points}\n"
+        f"👥 <b>Referrals:</b> {referral_count} orang\n"
+        f"🔗 <b>Direferensi oleh:</b> {referrer}\n\n"
+        "📞 <b>Kontak:</b>\n"
+        f"☎️ WhatsApp: <code>{data['whatsapp']}</code>\n"
+        f"📱 Telegram: <code>{data['telegram']}</code>\n\n"
+        "💳 <b>Payment Info:</b>\n"
+        f"💳 Metode: {data['payment_method']}\n"
+        f"🔢 Nomor: <code>{data['payment_number']}</code>\n"
+        f"📝 A/n: {data['owner_name']}\n\n"
+        "⚙️ Gunakan <code>/editinfo</code> untuk mengubah data"
+    )
+
+    await update.message.reply_text(summary, parse_mode="HTML")
+
+#============MY REFERRAL============
 async def myreferral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show user's referral information"""
     user_id = str(update.effective_user.id)

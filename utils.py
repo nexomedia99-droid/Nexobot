@@ -7,8 +7,16 @@ logger = logging.getLogger(__name__)
 
 # Config from environment variables
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+#GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_API_KEY = "AIzaSyBvCgLRZiWZTZ1b_iu-Rn4QJVN7yGVATc4"
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+BOT_USERNAME = "Nexobuzz_bot"
+GROUP_ID = os.getenv("GROUP_ID", "").strip() 
+BUZZER_TOPIC_ID = 3
+INFLUENCER_TOPIC_ID = 4
+PAYMENT_TOPIC_ID = 5
+PROMOTE_TOPIC_ID = 11
+
 
 try:
     OWNER_ID = int(os.getenv("OWNER_ID", "0"))

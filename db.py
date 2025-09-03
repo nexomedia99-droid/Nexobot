@@ -2,6 +2,7 @@ import sqlite3
 import logging
 from datetime import datetime
 from contextlib import contextmanager
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -108,6 +109,16 @@ def init_db():
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
             """)
+            cur.execute("""
+            CREATE TABLE IF NOT EXISTS promotions (
+                promo_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                link TEXT NOT NULL,
+                type TEXT NOT NULL,
+                followers TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
             
             # Indexes for better performance
             cur.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
@@ -119,10 +130,10 @@ def init_db():
             cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_logs_timestamp ON activity_logs(timestamp)")
             
             conn.commit()
-            logger.info("✅ Database initialized successfully")
+            logger.info("✅ Database berhasil di inisialisasi")
             
     except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
+        logger.error(f"Gagal menginisialisasi database: {e}")
         raise
 
 # ==== USER FUNCTIONS ====
@@ -243,6 +254,13 @@ def add_points_to_user(user_id, points_to_add):
     except Exception as e:
         logger.error(f"Failed to add points to user {user_id}: {e}")
         raise
+
+def deduct_points(user_id, points):
+    """Mengurangi poin dari saldo pengguna."""
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("UPDATE users SET points = points - ? WHERE user_id=?", (points, user_id))
+        conn.commit()
 
 def delete_user_by_id(user_id):
     """Delete user and all related data"""
@@ -434,3 +452,47 @@ def get_recent_group_messages(chat_id, limit=50):
     except Exception as e:
         logger.error(f"Failed to get recent messages: {e}")
         return []
+
+#=======PROMOTION FUNCTIONS=======
+def save_promotion(promo_data):
+    """Menyimpan data promosi baru ke database."""
+    # INI YANG HARUS DIINDENTASI
+    with get_conn() as conn:
+        cur = conn.cursor()
+        followers_json = json.dumps(promo_data['followers'])
+        cur.execute("""
+            INSERT INTO promotions (promo_id, user_id, link, type, followers, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (promo_data['promo_id'], promo_data['user_id'], promo_data['link'], promo_data['type'], followers_json, datetime.now()))
+        conn.commit()
+    # INI JUGA HARUS DIINDENTASI
+
+def get_promotion(promo_id):
+    """Mengambil data promosi dari database."""
+    # INI YANG HARUS DIINDENTASI
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM promotions WHERE promo_id=?", (promo_id,))
+        promo = cur.fetchone()
+        if promo:
+            followers_list = json.loads(promo[4])
+            return {'promo_id': promo[0], 'user_id': promo[1], 'link': promo[2], 'type': promo[3], 'followers': followers_list}
+    return None
+    # INI JUGA HARUS DIINDENTASI
+
+def add_follower(promo_id, follower_user_id):
+    """Menambahkan ID pengguna yang mengklik ke daftar follower sebuah promosi."""
+    # INI YANG HARUS DIINDENTASI
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT followers FROM promotions WHERE promo_id=?", (promo_id,))
+        current_followers_json = cur.fetchone()[0]
+
+        current_followers = json.loads(current_followers_json)
+        current_followers.append(follower_user_id)
+
+        updated_followers_json = json.dumps(current_followers)
+
+        cur.execute("UPDATE promotions SET followers=? WHERE promo_id=?", (updated_followers_json, promo_id))
+        conn.commit()
+    # INI JUGA HARUS DIINDENTASI
