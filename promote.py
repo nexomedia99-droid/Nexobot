@@ -216,11 +216,15 @@ async def promote_special_command(update: Update, context: ContextTypes.DEFAULT_
 async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles all inline button callbacks."""
     query = update.callback_query
+    print(f"🔍 DEBUG: Button handler dipanggil oleh user {query.from_user.id}")
+    print(f"🔍 DEBUG: Callback data: {query.data}")
+    
     await query.answer()
 
     if query.data.startswith('promote:'):
         promo_id = query.data.split(':')[1]
         user_id = str(query.from_user.id)
+        print(f"🔍 DEBUG: Processing promote button - promo_id: {promo_id}, user_id: {user_id}")
 
         # 1. Ambil data promosi dari database
         promotion_data = get_promotion(promo_id)
@@ -246,39 +250,70 @@ async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_T
         add_follower(promo_id, user_id)
 
         # 4. Kirim notifikasi DM
+        print(f"🔍 DEBUG: Mencoba mengirim DM ke user_id: {user_id}")
+        print(f"🔍 DEBUG: Promotion data: {promotion_data}")
+        
         try:
+            # Cek dulu apakah user sudah start bot
+            try:
+                test_message = await context.bot.send_chat_action(chat_id=user_id, action="typing")
+                print(f"✅ DEBUG: User {user_id} bisa menerima DM (test chat action berhasil)")
+            except Exception as test_e:
+                print(f"❌ DEBUG: User {user_id} tidak bisa menerima DM: {test_e}")
+                await query.answer("⚠️ Poin ditambahkan! Tapi Anda harus /start bot dulu untuk menerima DM link.", show_alert=True)
+                return
+            
             link = promotion_data['link']
+            print(f"🔍 DEBUG: Link asli: {link}")
+            
             # Pastikan link punya prefix
             if not link.startswith(("http://", "https://")):
                 link = "https://" + link
+            print(f"🔍 DEBUG: Link setelah diproses: {link}")
 
             # Ambil data pemilik promosi untuk ditampilkan
             promo_owner = get_user_by_id(promotion_data['user_id'])
             owner_username = promo_owner['username'] if promo_owner else "Unknown"
+            print(f"🔍 DEBUG: Owner username: @{owner_username}")
+
+            dm_text = (
+                f"🎉 <b>Terima kasih sudah support @{owner_username}!</b>\n\n"
+                f"🔗 <b>Link akun yang harus di-follow:</b>\n"
+                f"{link}\n\n"
+                f"🪙 <b>+1 poin</b> telah ditambahkan ke akun Anda!\n"
+                f"💰 Cek saldo poin dengan <code>/points</code>\n\n"
+                f"💡 <b>Tips:</b> Pastikan follow akun tersebut untuk mendukung member komunitas!\n"
+                f"⚠️ <b>Peringatan:</b> Jika ditemukan kecurangan, poin akan direset."
+            )
+            print(f"🔍 DEBUG: DM text yang akan dikirim:\n{dm_text}")
 
             # Kirim pesan dengan link dan info poin
+            print(f"🔄 DEBUG: Sedang mengirim DM...")
             dm_message = await context.bot.send_message(
                 chat_id=user_id,
-                text=(
-                    f"🎉 <b>Terima kasih sudah support @{owner_username}!</b>\n\n"
-                    f"🔗 <b>Link akun yang harus di-follow:</b>\n"
-                    f"{link}\n\n"
-                    f"🪙 <b>+1 poin</b> telah ditambahkan ke akun Anda!\n"
-                    f"💰 Cek saldo poin dengan <code>/points</code>\n\n"
-                    f"💡 <b>Tips:</b> Pastikan follow akun tersebut untuk mendukung member komunitas!\n"
-                    f"⚠️ <b>Peringatan:</b> Jika ditemukan kecurangan, poin akan direset."
-                ),
+                text=dm_text,
                 parse_mode="HTML"
             )
-            print(f"✅ DM berhasil dikirim ke user {user_id}, message_id: {dm_message.message_id}")
+            print(f"✅ DEBUG: DM berhasil dikirim ke user {user_id}, message_id: {dm_message.message_id}")
+            
+            # 5. Kirim pop-up konfirmasi sukses
+            await query.answer("✅ Poin berhasil ditambahkan. Silakan cek DM dari saya untuk tautannya!")
             
         except Exception as e:
-            print(f"❌ Gagal mengirim DM ke pengguna {user_id}: {e}")
-            # Tetap berikan feedback meski DM gagal
-            await query.answer("⚠️ Poin ditambahkan, tapi DM gagal terkirim. Silakan hubungi admin untuk link.", show_alert=True)
-
-        # 5. Kirim pop-up konfirmasi (bukan edit tombol)
-        await query.answer("✅ Poin berhasil ditambahkan. Silakan cek DM dari saya untuk tautannya!")
+            print(f"❌ DEBUG: Gagal mengirim DM ke pengguna {user_id}")
+            print(f"❌ DEBUG: Error detail: {type(e).__name__}: {str(e)}")
+            print(f"❌ DEBUG: Error args: {e.args}")
+            
+            # Berikan feedback spesifik berdasarkan jenis error
+            if "Forbidden" in str(e) or "blocked" in str(e).lower():
+                error_msg = "⚠️ Poin ditambahkan! Tapi Anda harus /start bot dulu untuk menerima DM link."
+            elif "Chat not found" in str(e):
+                error_msg = "⚠️ Poin ditambahkan! Tapi bot tidak bisa mengirim DM. Silakan /start bot terlebih dahulu."
+            else:
+                error_msg = "⚠️ Poin ditambahkan! Tapi DM gagal terkirim. Silakan hubungi admin untuk link."
+            
+            await query.answer(error_msg, show_alert=True)
+            return
 
 # =======================================================================
 # UTILITY FUNCTIONS
