@@ -26,7 +26,7 @@ MEMBER_AREA_PAGES = {
         "• <code>/summary</code> - Ringkasan percakapan grup\n"
         "• <code>/help</code> - Bantuan lengkap\n\n"
         "<code>/startai</code> - Mode interaktif AI\n"
-        "🤖 Tanya seputar dunia perbuzzeran: MG, Handle, Talent, dll.\n\n"
+        "🤖 Tanya seputar dunia perbuzzeran mengenai istilah-istilah yang belum di ketahui seperti: MG, Handle, Talent, dll.\n\n"
         "‼️ <b>PERINGATAN</b>\n"
         "• Jangan bagikan data pribadi\n"
         "• Dilarang promosi, spam, dan curang\n"
@@ -34,7 +34,7 @@ MEMBER_AREA_PAGES = {
     "member_area_3": (
         "👤 <b>Member Area (3/3)</b>\n\n"
         "🔥 <b>Promote Sosmed</b>\n"
-        "Promosi akun kamu dan dapatkan followers serta poin!\n\n"
+        "Promosikan akun sosmed kamu dan dapatkan followers serta poin!\n\n"
         "🎯 <b>Promosi Standar</b>\n"
         "• <code>/promote &lt;link&gt;</code>\n"
         "• Aktif 24 jam\n"
@@ -44,11 +44,12 @@ MEMBER_AREA_PAGES = {
         "• Di-pin selama 3 hari\n"
         "• Biaya: 15 poin\n\n"
         "📊 <b>Analitik</b>\n"
-        "• <code>/cek_followers &lt;ID&gt;</code> - Lihat pengklik\n\n"
+        "• <code>/cek_followers &lt;ID&gt;</code> - Lihat pengklik\n"
+        "gunakan command ini untuk cek siapa yang klik tombol follow dan cek kembali apakah sudah sesuai dengan jumlah followers\n\n"
         "💡 Tips:\n"
-        "• Gunakan link valid\n"
-        "• Dilarang curang\n"
-        "• Lapor ke admin jika ada masalah"
+        "• kamu harus tahu jumlah followers sebelum melakukan fitur promote. untuk mengetahui berapa jumlah followers yang bertambah sesuai dengan yang klik tombol follow (di telegram)\n"
+        "• Dilarang curang! jika ketahuan curang maka admin akan mereset poin\n"
+        "• Lapor ke admin jika ada masalah atau yang melakukan kecurangan\n"
     ),
 }
 
