@@ -79,7 +79,7 @@ async def promote_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     message_text = (
         f"🎉 <b>TIME TO SUPPORT!</b> 🎉\n\n"
-        f"✨ {safe_username} lagi ngejar followers nih 🚴💨\n"
+        f"✨ @{safe_username} lagi ngejar followers nih 🚴💨\n"
         f"Gas bantuin sekarang, jangan jadi penonton aja 🤡\n\n"
         f"👇 Klik tombol, dapet poin, dapet pahala sosial ✨"
     )
@@ -170,7 +170,7 @@ async def promote_special_command(update: Update, context: ContextTypes.DEFAULT_
 
     message_text = (
         "👑 <b>SPESIAL PROMOTE ALERT!</b> 👑\n\n"
-        f"Hari ini giliran <b>{safe_username}</b> naik ke spotlight ✨\n"
+        f"Hari ini giliran <b>@{safe_username}</b> naik ke spotlight ✨\n"
         "🚀 Bantu dia makin grow & dapetin vibes komunitas!\n\n"
         "🎁 Bonus: +1 poin buat kamu yang support lewat tombol di bawah!"
     )
@@ -244,21 +244,21 @@ async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_T
             if not link.startswith(("http://", "https://")):
                 link = "https://" + link
 
-            # Kirim link (tanpa parse_mode)
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=
-                f"🔗 Klik tautan ini dan follow untuk mendukung member kita:\n"
-                f"{link}"
-            )
-            # Kirim info tambahan dengan formatting
+            # Ambil data pemilik promosi untuk ditampilkan
+            promo_owner = get_user_by_id(promotion_data['user_id'])
+            owner_username = promo_owner['username'] if promo_owner else "Unknown"
+
+            # Kirim pesan dengan link dan info poin
             await context.bot.send_message(
                 chat_id=user_id,
                 text=(
-                    f"🪙 <b>+1 point</b> akan ditambahkan ke akun anda\n"
-                    f"Cek point kamu menggunakan perintah <code>/points</code>\n\n"
-                    f"💡 <b>Tips:</b> Semakin banyak kamu follow, semakin banyak poin yang kamu dapatkan!\n"
-                    f"‼️ <b>NOTE:</b> Jangan melakukan kecurangan, jika ditemukan kecurangan poin anda akan direset."
+                    f"🎉 <b>Terima kasih sudah support @{owner_username}!</b>\n\n"
+                    f"🔗 <b>Link akun yang harus di-follow:</b>\n"
+                    f"{link}\n\n"
+                    f"🪙 <b>+1 poin</b> telah ditambahkan ke akun Anda!\n"
+                    f"💰 Cek saldo poin dengan <code>/points</code>\n\n"
+                    f"💡 <b>Tips:</b> Pastikan follow akun tersebut untuk mendukung member komunitas!\n"
+                    f"⚠️ <b>Peringatan:</b> Jika ditemukan kecurangan, poin akan direset."
                 ),
                 parse_mode="HTML"
             )
