@@ -112,7 +112,7 @@ def main():
         # Apply button
         application.add_handler(CallbackQueryHandler(apply_button, pattern=r"^apply_\d+$"))
         # Khusus tombol promote
-        application.add_handler(CallbackQueryHandler(promote_button_handler, pattern=r "^promote:"))
+        application.add_handler(CallbackQueryHandler(promote_button_handler, pattern=r"^promote:"))
         # Tombol start
         application.add_handler(CallbackQueryHandler(button_handler))
 
