@@ -166,6 +166,9 @@ def main():
         application.add_handler(CommandHandler("leaderboard", leaderboard_command))
         application.add_handler(CommandHandler("points", points_command))
         application.add_handler(CommandHandler("addpoint", addpoint_command))
+        
+        # Test command untuk debugging DM
+        application.add_handler(CommandHandler("testdm", test_dm_command))
 
 
         # Start services
