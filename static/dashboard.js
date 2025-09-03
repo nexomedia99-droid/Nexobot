@@ -637,3 +637,142 @@ function showSuccess(message) {
 window.addEventListener('beforeunload', () => {
     stopAutoRefresh();
 });
+let lastUpdateTime = 0;
+
+async function fetchStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        updateDashboard(data);
+        lastUpdateTime = Date.now();
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        showError('Failed to fetch data');
+    }
+}
+
+function updateDashboard(data) {
+    // Update main stats
+    document.getElementById('totalUsers').textContent = data.total_users || 0;
+    document.getElementById('totalJobs').textContent = data.total_jobs || 0;
+    document.getElementById('uptime').textContent = data.uptime || '0h 0m';
+    document.getElementById('totalPoints').textContent = (data.total_points || 0).toLocaleString();
+
+    // Update system stats
+    const systemStats = document.getElementById('systemStats');
+    systemStats.innerHTML = `
+        <div class="stat-item">
+            <span>🤖 Bot Status</span>
+            <span class="status-badge status-ok">${data.bot_status || 'offline'}</span>
+        </div>
+        <div class="stat-item">
+            <span>💬 Total Messages</span>
+            <span>${data.total_messages || 0}</span>
+        </div>
+        <div class="stat-item">
+            <span>🧠 AI Requests</span>
+            <span>${data.ai_requests || 0}</span>
+        </div>
+        <div class="stat-item">
+            <span>📝 Registrations</span>
+            <span>${data.registrations || 0}</span>
+        </div>
+        <div class="stat-item">
+            <span>💼 Job Applications</span>
+            <span>${data.job_applications || 0}</span>
+        </div>
+        <div class="stat-item">
+            <span>⚠️ Errors</span>
+            <span>${data.errors || 0}</span>
+        </div>
+        <div class="stat-item">
+            <span>🎯 Promotions</span>
+            <span>${data.total_promotions || 0}</span>
+        </div>
+        <div class="stat-item">
+            <span>🏆 Top User</span>
+            <span>@${data.top_user?.username || 'N/A'} (${data.top_user?.points || 0} pts)</span>
+        </div>
+    `;
+
+    // Update recent activities
+    const recentActivities = document.getElementById('recentActivities');
+    if (data.recent_activities && data.recent_activities.length > 0) {
+        recentActivities.innerHTML = data.recent_activities
+            .slice(0, 10)
+            .map(activity => `
+                <div class="activity-item">
+                    <div><strong>${activity.type}</strong>: ${activity.description}</div>
+                    <div class="activity-time">${formatTime(activity.timestamp)}</div>
+                </div>
+            `).join('');
+    } else {
+        recentActivities.innerHTML = '<div class="activity-item">No recent activities</div>';
+    }
+
+    // Update environment status
+    const envStatus = document.getElementById('envStatus');
+    const envVars = data.environment_vars || {};
+    envStatus.innerHTML = Object.entries(envVars)
+        .map(([key, value]) => `
+            <div class="env-item">
+                <span>${key.replace('_', ' ').toUpperCase()}</span>
+                <span class="status-badge ${value.includes('✅') ? 'status-ok' : 'status-error'}">${value}</span>
+            </div>
+        `).join('');
+}
+
+function formatTime(timestamp) {
+    if (!timestamp) return 'Unknown';
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+    } catch {
+        return timestamp;
+    }
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #fed7d7;
+        color: #c53030;
+        padding: 15px;
+        border-radius: 8px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+        }
+    }, 5000);
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard initializing...');
+    fetchStats();
+    
+    // Auto-refresh every 10 seconds
+    setInterval(fetchStats, 10000);
+    
+    // Update connection status
+    const statusElement = document.getElementById('status');
+    setInterval(() => {
+        const timeSinceUpdate = Date.now() - lastUpdateTime;
+        if (timeSinceUpdate > 30000) { // 30 seconds
+            statusElement.innerHTML = '<span class="dot offline"></span> Connection Lost';
+            statusElement.style.background = '#f56565';
+        } else {
+            statusElement.innerHTML = '<span class="dot online"></span> Bot Online';
+            statusElement.style.background = '#48bb78';
+        }
+    }, 5000);
+});

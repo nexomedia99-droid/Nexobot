@@ -290,3 +290,66 @@
     <script src="/static/dashboard.js"></script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexoBuzz Bot Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 NexoBuzz Bot Dashboard</h1>
+            <div class="status-indicator" id="status">
+                <span class="dot online"></span> Bot Online
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>👥 Total Users</h3>
+                <div class="stat-value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>💼 Total Jobs</h3>
+                <div class="stat-value" id="totalJobs">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>⏱️ Uptime</h3>
+                <div class="stat-value" id="uptime">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>🪙 Total Points</h3>
+                <div class="stat-value" id="totalPoints">-</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>📊 System Statistics</h3>
+                <div class="system-stats" id="systemStats">
+                    Loading...
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📈 Recent Activities</h3>
+                <div class="activity-list" id="recentActivities">
+                    Loading...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔧 Environment Status</h3>
+            <div class="env-status" id="envStatus">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

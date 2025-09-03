@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 
 dashboard_app = Flask(__name__, template_folder='templates', static_folder='static')
 
+# Ensure static and template directories exist
+import os
+if not os.path.exists('static'):
+    os.makedirs('static')
+if not os.path.exists('templates'):
+    os.makedirs('templates')
+
 # Global variables for tracking
 dashboard_stats = {
     "bot_start_time": time.time(),
@@ -226,6 +233,31 @@ def api_jobs():
         logger.error(f"Dashboard jobs error: {e}")
         return jsonify({"error": str(e)}), 500
 
+@dashboard_app.route('/debug')
+def debug_info():
+    """Debug information endpoint"""
+    try:
+        import sys
+        import platform
+        
+        debug_data = {
+            "python_version": sys.version,
+            "platform": platform.platform(),
+            "working_directory": os.getcwd(),
+            "static_folder": dashboard_app.static_folder,
+            "template_folder": dashboard_app.template_folder,
+            "static_folder_exists": os.path.exists('static'),
+            "template_folder_exists": os.path.exists('templates'),
+            "dashboard_html_exists": os.path.exists('templates/dashboard.html'),
+            "dashboard_css_exists": os.path.exists('static/dashboard.css'),
+            "dashboard_js_exists": os.path.exists('static/dashboard.js'),
+            "port_info": "Running on 0.0.0.0:5000"
+        }
+        
+        return jsonify(debug_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @dashboard_app.route('/api/analytics')
 def api_analytics():
     """API endpoint for analytics data"""
@@ -300,9 +332,20 @@ def log_activity(action_type, user_id=None, description=""):
 def run_dashboard():
     """Run the dashboard Flask app"""
     try:
-        dashboard_app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
+        # Ensure port 5000 is available
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('127.0.0.1', 5000))
+        sock.close()
+        
+        if result == 0:
+            logger.warning("Port 5000 already in use, trying port 5001")
+            dashboard_app.run(host="0.0.0.0", port=5001, debug=False, use_reloader=False, threaded=True)
+        else:
+            dashboard_app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False, threaded=True)
     except Exception as e:
         logger.error(f"Dashboard server failed to start: {e}")
+        print(f"❌ Dashboard error: {e}")
 
 def start_dashboard():
     """Start the dashboard in a daemon thread"""

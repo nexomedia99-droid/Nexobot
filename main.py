@@ -173,6 +173,7 @@ def main():
         
         start_dashboard()
         print("📊 Dashboard server started on port 5000")
+        print("🔍 Debug info available at: http://0.0.0.0:5000/debug")
 
         print("🤖 Bot is starting...")
         log_activity("bot_start", description="Bot started successfully")
