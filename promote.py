@@ -86,7 +86,7 @@ async def promote_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # 5. Kirim pesan ke grup
-    await context.bot.send_message(
+    sent_message = await context.bot.send_message(
         chat_id=GROUP_ID,
         message_thread_id=PROMOTE_TOPIC_ID,
         text=message_text,
@@ -234,7 +234,7 @@ async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_T
             return
 
         # 3. Tambah poin dan catat interaksi
-        add_points_to_user(user_id, 1)  # Reward fix: 10 poin
+        add_points_to_user(user_id, 1)  # Reward: 1 poin per click
         add_follower(promo_id, user_id)
 
         # 4. Kirim notifikasi DM
@@ -267,6 +267,31 @@ async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_T
 
         # 5. Kirim pop-up konfirmasi (bukan edit tombol)
         await query.answer("✅ Poin berhasil ditambahkan. Silakan cek DM dari saya untuk tautannya!")
+
+# =======================================================================
+# UTILITY FUNCTIONS
+# =======================================================================
+async def delete_promotion_message(context: ContextTypes.DEFAULT_TYPE):
+    """Delete promotion message after 24 hours"""
+    job = context.job
+    try:
+        await context.bot.delete_message(
+            chat_id=job.data["chat_id"],
+            message_id=job.data["message_id"]
+        )
+    except Exception as e:
+        print(f"Failed to delete promotion message: {e}")
+
+async def unpin_message(context: ContextTypes.DEFAULT_TYPE):
+    """Unpin special promotion message after specified time"""
+    job = context.job
+    try:
+        await context.bot.unpin_chat_message(
+            chat_id=job.data["chat_id"],
+            message_id=job.data["message_id"]
+        )
+    except Exception as e:
+        print(f"Failed to unpin message: {e}")
 
 # =======================================================================
 # CEK FOLLOWERS

@@ -97,6 +97,15 @@ def api_stats():
             "owner_id": "✅ Configured" if os.getenv("OWNER_ID") else "❌ Missing"
         }
         
+        # Performance metrics
+        with get_conn() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM promotions")
+            total_promotions = cur.fetchone()[0]
+            
+            cur.execute("SELECT COUNT(*) FROM promotions WHERE created_at >= date('now', '-7 days')")
+            weekly_promotions = cur.fetchone()[0]
+
         stats = {
             "bot_status": "online",
             "uptime": f"{uptime_hours}h {uptime_minutes}m",
@@ -107,11 +116,14 @@ def api_stats():
             "closed_jobs": closed_jobs,
             "paid_jobs": paid_jobs,
             "total_points": total_points,
+            "total_promotions": total_promotions,
+            "weekly_promotions": weekly_promotions,
             "total_messages": dashboard_stats["total_messages"],
             "ai_requests": dashboard_stats["ai_requests"],
             "registrations": dashboard_stats["registrations"],
             "job_applications": dashboard_stats["job_applications"],
             "errors": dashboard_stats["errors"],
+            "avg_points_per_user": total_points / len(users) if users else 0,
             "last_activity": datetime.fromtimestamp(dashboard_stats["last_activity"]).strftime('%Y-%m-%d %H:%M:%S'),
             "environment_vars": env_status,
             "top_user": {

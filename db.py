@@ -122,12 +122,16 @@ def init_db():
             
             # Indexes for better performance
             cur.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_users_points ON users(points)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_created_at ON jobs(created_at)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_applicants_job_id ON applicants(job_id)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_applicants_user_id ON applicants(user_id)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON achievements(user_id)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs(user_id)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_logs_timestamp ON activity_logs(timestamp)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_promotions_user_id ON promotions(user_id)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_promotions_created_at ON promotions(created_at)")
             
             conn.commit()
             logger.info("✅ Database berhasil di inisialisasi")
