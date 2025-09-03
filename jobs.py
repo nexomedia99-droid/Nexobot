@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, filters
 from decorators import admin_only
 from db import (
-    add_job, get_all_jobs, get_job_by_id, add_applicant, get_applicants_by_job, 
+    add_job, get_all_jobs, get_job_by_id, add_applicant, get_applicants_by_job,
     get_user_by_id, add_badge_to_user, has_badge, get_total_applies, add_points_to_user, get_conn
 )
 from dashboard import log_activity
@@ -30,11 +30,11 @@ async def postjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def postjob_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle job title input"""
     title = sanitize_input(update.message.text.strip())
-    
+
     if len(title) < 5:
         await update.message.reply_text("❌ Judul terlalu pendek (minimal 5 karakter). Coba lagi:")
         return POSTJOB_TITLE
-    
+
     context.user_data['postjob_title'] = title
     await update.message.reply_text(
         "💰 *Langkah 2/4: Fee/Gaji*\n\n"
@@ -47,11 +47,11 @@ async def postjob_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def postjob_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle job fee input"""
     fee = sanitize_input(update.message.text.strip())
-    
+
     if len(fee) < 2:
         await update.message.reply_text("❌ Fee tidak boleh kosong. Masukkan nominal yang valid:")
         return POSTJOB_FEE
-    
+
     context.user_data['postjob_fee'] = fee
     await update.message.reply_text(
         "📋 *Langkah 3/4: Deskripsi Job*\n\n"
@@ -68,11 +68,11 @@ async def postjob_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def postjob_desc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle job description input"""
     desc = sanitize_input(update.message.text.strip(), max_length=2000)
-    
+
     if len(desc) < 10:
         await update.message.reply_text("❌ Deskripsi terlalu pendek (minimal 10 karakter). Coba lagi:")
         return POSTJOB_DESC
-    
+
     context.user_data['postjob_desc'] = desc
 
     # Show topic selection
@@ -98,13 +98,13 @@ async def postjob_topic_selection(update: Update, context: ContextTypes.DEFAULT_
     """Handle topic selection and create job"""
     query = update.callback_query
     await query.answer()
-    
+
     try:
         # Get stored data
         title = context.user_data['postjob_title']
         fee = context.user_data['postjob_fee']
         desc = context.user_data['postjob_desc']
-        
+
         # Determine topic based on selection
         if query.data == "topic_buzzer":
             topic_id = BUZZER_TOPIC_ID
@@ -117,10 +117,10 @@ async def postjob_topic_selection(update: Update, context: ContextTypes.DEFAULT_
         else:
             await query.edit_message_text("❌ Pilihan tidak valid.")
             return ConversationHandler.END
-        
+
         # Create job in database
         job_id = add_job(title, fee, desc, status="aktif")
-        
+
         # Create job post message
         job_text = (
             f"📢 *JOB BARU - {topic_emoji} {topic_name.upper()}*\n\n"
@@ -130,12 +130,12 @@ async def postjob_topic_selection(update: Update, context: ContextTypes.DEFAULT_
             f"📋 **Deskripsi:**\n{desc}\n\n"
             f"🟢 **Status:** Aktif"
         )
-        
+
         # Create apply button
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Apply Job", callback_data=f"apply_{job_id}")]
         ])
-        
+
         # Send to appropriate topic
         target_chat_id = GROUP_ID
         send_kwargs = {
@@ -145,9 +145,9 @@ async def postjob_topic_selection(update: Update, context: ContextTypes.DEFAULT_
             "reply_markup": reply_markup,
             "message_thread_id": topic_id
         }
-        
+
         await context.bot.send_message(**send_kwargs)
-        
+
         # Confirm to admin
         await query.edit_message_text(
             f"✅ *Job Berhasil Diposting!*\n\n"
@@ -157,16 +157,16 @@ async def postjob_topic_selection(update: Update, context: ContextTypes.DEFAULT_
             f"Job telah diposting ke grup dan siap menerima aplikasi!",
             parse_mode="Markdown"
         )
-        
+
         # Log activity
         log_activity("job_posted", str(query.from_user.id), f"Job {job_id} posted: {title}")
-        
+
     except Exception as e:
         logger.error(f"Failed to post job: {e}")
         await query.edit_message_text(
             "❌ Terjadi kesalahan saat memposting job. Silakan coba lagi."
         )
-    
+
     return ConversationHandler.END
 
 async def postjob_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -206,7 +206,7 @@ async def updatejob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         job_id, status = context.args[0], context.args[1].lower()
-        
+
         # Validate job exists
         job = get_job_by_id(job_id)
         if not job:
@@ -225,7 +225,7 @@ async def updatejob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with get_conn() as conn:
             cur = conn.cursor()
             cur.execute(
-                "UPDATE jobs SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
+                "UPDATE jobs SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                 (status, job_id)
             )
             conn.commit()
@@ -244,22 +244,22 @@ async def updatejob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"🎉 Job **{job['title']}** sudah **CAIR**!\n\n"
                     f"Selamat buat semua pelamar yang berhasil! 🎊"
                 )
-                
+
                 send_kwargs = {
                     "chat_id": GROUP_ID,
                     "text": notif,
                     "parse_mode": "Markdown"
                 }
-                
+
                 if PAYMENT_TOPIC_ID:
                     send_kwargs["message_thread_id"] = PAYMENT_TOPIC_ID
-                
+
                 await context.bot.send_message(**send_kwargs)
             except Exception as e:
                 logger.error(f"Failed to send payment notification: {e}")
 
         log_activity("job_updated", str(update.effective_user.id), f"Job {job_id} status changed to {status}")
-        
+
     except Exception as e:
         logger.error(f"Failed to update job: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mengupdate job.")
@@ -280,35 +280,35 @@ async def resetjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         arg = context.args[0]
-        
+
         with get_conn() as conn:
             cur = conn.cursor()
-            
+
             if arg.lower() == "all":
                 # Delete all jobs and applications
                 cur.execute("DELETE FROM applicants")
                 cur.execute("DELETE FROM jobs")
                 conn.commit()
-                
+
                 await update.message.reply_text("✅ Semua job dan aplikasi telah dihapus.")
                 log_activity("reset_jobs", str(update.effective_user.id), "All jobs deleted")
-                
+
             else:
                 # Delete specific job
                 job_id = arg
                 job = get_job_by_id(job_id)
-                
+
                 if not job:
                     await update.message.reply_text(f"❌ Job dengan ID {job_id} tidak ditemukan.")
                     return
-                
+
                 cur.execute("DELETE FROM applicants WHERE job_id = ?", (job_id,))
                 cur.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
                 conn.commit()
-                
+
                 await update.message.reply_text(f"✅ Job {job_id} telah dihapus.")
                 log_activity("delete_job", str(update.effective_user.id), f"Job {job_id} deleted")
-                
+
     except Exception as e:
         logger.error(f"Failed to reset jobs: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat menghapus job.")
@@ -328,13 +328,13 @@ async def pelamarjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     try:
         job_id = context.args[0]
         job = get_job_by_id(job_id)
-        
+
         if not job:
             await update.message.reply_text(f"❌ Job dengan ID {job_id} tidak ditemukan.")
             return
 
         applicants = get_applicants_by_job(job_id)
-        
+
         if not applicants:
             await update.message.reply_text(
                 f"📭 *Job {job_id}: {job['title']}*\n\n"
@@ -348,7 +348,7 @@ async def pelamarjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text += f"💰 **Fee:** {job['fee']}\n"
         text += f"🟢 **Status:** {job['status']}\n\n"
         text += f"👥 **Total Pelamar:** {len(applicants)} orang\n\n"
-        
+
         for i, user_id in enumerate(applicants, start=1):
             user = get_user_by_id(user_id)
             if user:
@@ -358,7 +358,7 @@ async def pelamarjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 text += f"{i}. User {user_id} (data tidak ditemukan)\n"
 
         await update.message.reply_text(text, parse_mode="Markdown")
-        
+
     except Exception as e:
         logger.error(f"Failed to get job applicants: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mengambil data pelamar.")
@@ -369,7 +369,7 @@ async def listjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """List all available jobs"""
     try:
         jobs = get_all_jobs()
-        
+
         if not jobs:
             await update.message.reply_text(
                 "📭 *Belum Ada Job Tersedia*\n\n"
@@ -381,26 +381,26 @@ async def listjob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Separate jobs by status
         aktif_jobs = [job for job in jobs if job['status'] == 'aktif']
         other_jobs = [job for job in jobs if job['status'] != 'aktif']
-        
+
         text = "📋 *Daftar Job Tersedia*\n\n"
-        
+
         if aktif_jobs:
             text += "🟢 **Job Aktif:**\n"
             for job in aktif_jobs[:10]:  # Limit to 10 active jobs
                 text += f"🆔 {job['id']} | {job['title']} | 💰 {job['fee']}\n"
-        
+
         if other_jobs:
             text += f"\n📊 **Job Lainnya:**\n"
             for job in other_jobs[:5]:  # Limit to 5 other jobs
                 status_emoji = "🔴" if job['status'] == 'close' else "💸"
                 text += f"{status_emoji} {job['id']} | {job['title']} | {job['status']}\n"
-        
+
         text += f"\n💡 **Total Job:** {len(jobs)}\n"
         text += f"📝 Gunakan `/infojob <id>` untuk detail job\n"
         text += f"📌 Contoh: `/infojob 1`"
 
         await update.message.reply_text(text, parse_mode="Markdown")
-        
+
     except Exception as e:
         logger.error(f"Failed to list jobs: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mengambil daftar job.")
@@ -421,7 +421,7 @@ async def infojob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         job_id = context.args[0]
         job = get_job_by_id(job_id)
-        
+
         if not job:
             await update.message.reply_text(f"❌ Job dengan ID {job_id} tidak ditemukan.")
             return
@@ -429,7 +429,7 @@ async def infojob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Get applicant count
         applicants = get_applicants_by_job(job_id)
         applicant_count = len(applicants)
-        
+
         # Status emoji
         status_emoji = {
             'aktif': '🟢',
@@ -447,7 +447,7 @@ async def infojob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📋 **Deskripsi:**\n{job['desc']}\n\n"
             f"📅 **Dibuat:** {job.get('created_at', 'Unknown')}"
         )
-        
+
         # Only show apply button if job is active
         if job['status'] == 'aktif':
             reply_markup = InlineKeyboardMarkup([
@@ -456,12 +456,25 @@ async def infojob_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(job_text, parse_mode="Markdown", reply_markup=reply_markup)
         else:
             await update.message.reply_text(job_text, parse_mode="Markdown")
-            
+
     except Exception as e:
         logger.error(f"Failed to get job info: {e}")
         await update.message.reply_text("❌ Terjadi kesalahan saat mengambil info job.")
 
 # ======== APPLY BUTTON HANDLER ========
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle button callbacks"""
+    query = update.callback_query
+    print(f"🔧 DEBUG: jobs.py button_handler called with data: {query.data}") # Added debug log
+    await query.answer()
+
+    # Check if the callback is for applying to a job
+    if query.data.startswith("apply_"):
+        await apply_button(update, context)
+    # Add other button handlers here if needed in the future
+    # elif query.data.startswith("other_action_"):
+    #     await other_action_handler(update, context)
 
 async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle job application button press"""
@@ -470,7 +483,7 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = str(query.from_user.id)
     user_display = get_user_display_name(query.from_user)
-    
+
     try:
         # Check if user is registered
         user_data = get_user_by_id(user_id)
@@ -492,7 +505,7 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Extract job ID from callback data
         job_id = query.data.split("_")[1]
         job = get_job_by_id(job_id)
-        
+
         if not job:
             try:
                 await context.bot.send_message(
@@ -533,10 +546,10 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Add user as applicant
         add_applicant(job_id, user_id)
-        
+
         # Check and award achievement badges
         total_applies = get_total_applies(user_id)
-        
+
         # Badge: Rising Star (first apply)
         if total_applies == 1 and not has_badge(user_id, "🚀 Rising Star"):
             add_badge_to_user(user_id, "🚀 Rising Star")
@@ -577,7 +590,7 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         updated_applicants = get_applicants_by_job(job_id)
         user_position = updated_applicants.index(user_id) + 1
         total_applicants = len(updated_applicants)
-        
+
         # Send success notification
         try:
             success_msg = (
@@ -589,7 +602,7 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"💰 **Bonus:** +2 poin akan di tambahkan setelah selesai mengerjakan job\n\n"
                 f"📋 **Daftar Pelamar Saat Ini:**\n"
             )
-            
+
             # Show top 10 applicants
             for i, applicant_id in enumerate(updated_applicants[:10], 1):
                 applicant = get_user_by_id(applicant_id)
@@ -599,24 +612,24 @@ async def apply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         success_msg += f"👉 {i}. **{username}** (kamu)\n"
                     else:
                         success_msg += f"{i}. {username}\n"
-            
+
             if len(updated_applicants) > 10:
                 success_msg += f"... dan {len(updated_applicants) - 10} lainnya\n"
-            
+
             success_msg += f"\n🎉 Good luck! Tunggu pengumuman dari admin ya!"
-            
+
             await context.bot.send_message(
                 chat_id=user_id,
                 text=success_msg,
                 parse_mode="Markdown"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to send success notification: {e}")
 
         # Log activity
         log_activity("job_apply", user_id, f"Applied to job {job_id}: {job['title']}")
-        
+
     except Exception as e:
         logger.error(f"Failed to process job application: {e}")
         try:

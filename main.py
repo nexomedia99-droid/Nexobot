@@ -4,7 +4,7 @@ from dashboard import start_dashboard, log_activity
 import logging
 from telegram.ext import (
     Application, CommandHandler, MessageHandler,
-    CallbackQueryHandler, filters, ConversationHandler
+    CallbackQueryHandler, filters, ConversationHandler, Update, ContextTypes
 )
 from utils import ensure_env, BOT_TOKEN
 from start import start, button_handler, check_milestone, new_member_handler, left_member_handler, hidden_tag_handler
@@ -41,7 +41,7 @@ def main():
         # Initialize database
         init_db()
         print("✅ Database initialized successfully")
-        
+
         # Ensure environment variables are set
         ensure_env()
         print("✅ Environment variables validated")
@@ -83,7 +83,7 @@ def main():
         # Register conversation handlers
         application.add_handler(conv_handler)
         application.add_handler(editinfo_conv)
-        
+
         # Register restriction for groups
         application.add_handler(
             CommandHandler("register",
@@ -98,7 +98,7 @@ def main():
 
         # Jobs Feature
         application.add_handler(postjob_conv)
-        
+
         # Admin job commands
         application.add_handler(CommandHandler("postjob", postjob_command))
         application.add_handler(CommandHandler("updatejob", updatejob_command))
@@ -112,16 +112,17 @@ def main():
         # Apply button
         application.add_handler(CallbackQueryHandler(apply_button, pattern=r"^apply_\d+$"))
         # Khusus tombol promote
-        application.add_handler(CallbackQueryHandler(promote_button_handler, pattern=r"^promote_"))
+        application.add_handler(CallbackQueryHandler(promote_button_handler, pattern=r "^promote:"))
         # Tombol start
         application.add_handler(CallbackQueryHandler(button_handler))
-        
+
         #Start commands
         application.add_handler(
             CommandHandler("start", start, filters=filters.ChatType.PRIVATE)
         )
         application.add_handler(
-            CommandHandler("start", lambda u, c: u.message.reply_text("❌ Command /start hanya bisa digunakan di private chat (DM bot)."), filters=filters.ChatType.GROUPS)
+            CommandHandler("start", lambda u, c: u.message.reply_text("❌ Command /start hanya bisa digunakan di private chat (DM bot)."), filters=filters.ChatType.GROUPS
+            )
         )
 
         # Promote commands
@@ -140,12 +141,12 @@ def main():
         application.add_handler(CommandHandler("startai", start_ai_chat))
         application.add_handler(CommandHandler("stopai", stop_ai_chat))
         application.add_handler(CommandHandler("ai", chat_with_ai))
-        
+
         # AI di private chat: interaktif TANPA /ai
         application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, chat_with_ai)
         )
-        
+
         # Summary dan group activity
         application.add_handler(CommandHandler("summary", summary_command))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_group_messages))
@@ -171,23 +172,23 @@ def main():
         # Start services
         keep_alive()
         print("🌐 Keep-alive server started on port 8080")
-        
+
         start_dashboard()
         print("📊 Dashboard server started on port 5000")
         print("🔍 Debug info available at: http://0.0.0.0:5000/debug")
 
         print("🤖 Bot is starting...")
         log_activity("bot_start", description="Bot started successfully")
-        
+
         # Run the bot
         application.run_polling(drop_pending_updates=True)
-        
+
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
         print(f"❌ Error starting bot: {e}")
         print("⚠️  Bot failed to start, but dashboard is still running on http://0.0.0.0:5000")
         print("📝 Please check your BOT_TOKEN and try again")
-        
+
         # Keep the dashboard running even if bot fails
         try:
             import time

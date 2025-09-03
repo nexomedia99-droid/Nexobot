@@ -216,8 +216,10 @@ async def promote_special_command(update: Update, context: ContextTypes.DEFAULT_
 async def promote_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles all inline button callbacks."""
     query = update.callback_query
-    print(f"🔍 DEBUG: Button handler dipanggil oleh user {query.from_user.id}")
-    print(f"🔍 DEBUG: Callback data: {query.data}")
+    print(f"✅ PROMOTE HANDLER: Button handler BERHASIL dipanggil!")
+    print(f"✅ PROMOTE HANDLER: User {query.from_user.id} (@{query.from_user.username})")
+    print(f"✅ PROMOTE HANDLER: Callback data: '{query.data}'")
+    print(f"✅ PROMOTE HANDLER: Checking if data starts with 'promote:'...")
     
     await query.answer()
 
